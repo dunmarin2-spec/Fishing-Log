@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; overflow-x: hidden; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        /* 카카오페이 버튼: 절대 안 깨지게 고정 */
+        /* 카카오페이 버튼: 모바일 최적화 */
         .pay-btn {
             background-color: #FAE100;
             color: #3C1E1E !important;
@@ -24,7 +24,7 @@
             gap: 8px;
             min-width: 260px;
             white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(250, 225, 0, 0.25);
+            box-shadow: 0 4px 15px rgba(250, 225, 0, 0.3);
             transition: all 0.2s;
             font-size: 15px;
         }
@@ -41,13 +41,35 @@
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
+
+        /* 💡 사진 확대 모달 (팝업) 스타일 */
+        #photoModal {
+            display: none; /* 평소엔 숨김 */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* 배경 어둡게 */
+            z-index: 9999; /* 맨 위에 띄움 */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px); /* 배경 흐리게 */
+        }
+        #photoModal.active { display: flex; } /* 활성화 시 보임 */
+        #photoModal img {
+            max-width: 100%;
+            max-height: 90%;
+            object-fit: contain; /* 비율 유지하며 꽉 차게 */
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body class="py-6 sm:py-10 px-4">
     <div class="max-w-5xl mx-auto flex flex-col min-h-screen">
         
         <header class="text-center mb-8 sm:mb-12">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 flex justify-center items-center gap-2 tracking-tighter text-black">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 flex justify-center items-center gap-2 tracking-tighter">
                 <i data-lucide="waves" class="text-blue-600 w-8 h-8 sm:w-10 sm:h-10"></i> 입질 가드
             </h1>
             <p class="text-slate-500 mt-2 text-xs sm:text-sm font-medium italic">나만의 비밀 포인트와 월척 인증샷을 기록하라</p>
@@ -62,35 +84,32 @@
 
         <main class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
             <section class="lg:col-span-4 space-y-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 h-fit">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 h-fit text-black">
                     <h2 class="text-lg font-bold mb-5 flex items-center gap-2 text-slate-800">
-                        <i data-lucide="anchor" class="w-5 h-5 text-blue-500"></i> 오늘의 출조 기록
+                        <i data-lucide="user-plus" class="w-5 h-5 text-blue-500"></i> 오늘의 출조 기록
                     </h2>
-                    
                     <div class="space-y-4">
                         <div class="space-y-2">
-                            <label class="block text-sm font-bold text-slate-600">월척 인증샷 (선택)</label>
+                            <label class="block text-sm font-medium text-slate-600">월척 인증샷 (선택)</label>
                             <div class="flex items-center gap-3">
                                 <label class="bg-blue-50 text-blue-700 border border-blue-200 px-4 py-3 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-2 shadow-sm active:scale-95 transition">
                                     <i data-lucide="image-plus" class="w-4 h-4"></i> 사진 추가
                                     <input type="file" accept="image/*" class="hidden" onchange="previewImage(event)">
                                 </label>
-                                <div id="previewContainer" class="hidden relative group">
-                                    <img id="imagePreview" src="" alt="미리보기" class="w-16 h-16 object-cover rounded-lg border-2 border-blue-200">
-                                    <button onclick="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"><i data-lucide="x" class="w-3 h-3"></i></button>
-                                </div>
+                                <img id="imagePreview" src="" alt="사진 미리보기" class="hidden w-16 h-16 object-cover rounded-lg border-2 border-slate-100">
+                                <button id="removeImageBtn" onclick="removeImage()" class="hidden text-slate-300 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3 mb-3 text-black">
-                            <input id="fishNameInput" type="text" placeholder="어종 (예: 감성돔)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm text-black">
-                            <input id="sizeInput" type="text" placeholder="크기 (cm)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm text-black">
+                            <input id="fishNameInput" type="text" placeholder="어종 (예: 감성돔)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
+                            <input id="sizeInput" type="text" placeholder="크기 (cm)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
                         </div>
-                        <input id="locationInput" type="text" placeholder="포인트 (예: 가덕도)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm text-black">
-                        <input id="tideInput" type="text" placeholder="물때 (예: 4물)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm text-black">
+                        <input id="locationInput" type="text" placeholder="포인트 (예: 가덕도)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
+                        <input id="tideInput" type="text" placeholder="물때 (예: 4물)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
                         <textarea id="baitInput" placeholder="미끼 및 채비 (예: 크릴, 0.8호 전자찌)" class="w-full p-3 border rounded-xl outline-none mb-4 h-24 bg-slate-50 text-sm text-black"></textarea>
                         
-                        <button onclick="addLog()" class="w-full bg-blue-600 text-white font-bold p-4 rounded-xl hover:bg-blue-700 transition active:scale-95 text-sm shadow-lg shadow-blue-100 uppercase tracking-widest">조과 저장하기</button>
+                        <button onclick="addLog()" class="w-full bg-blue-600 text-white font-bold p-4 rounded-xl hover:bg-blue-700 transition active:scale-95 text-sm shadow-md shadow-blue-100">조과 저장하기</button>
                     </div>
                 </div>
             </section>
@@ -103,9 +122,10 @@
                     <div id="logList" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-black"></div>
                 </div>
             </section>
-        </main>
+        </div>
 
         <footer class="mt-16 mb-10 text-center border-t border-slate-200 pt-10 px-4">
+            
             <div class="mb-12">
                 <p class="text-sm font-bold text-slate-600 mb-5 tracking-tight">앱이 마음에 드셨다면?</p>
                 <div class="flex justify-center">
@@ -114,60 +134,64 @@
                         <span>커피 한 잔 선물하기</span>
                     </a>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-4 font-semibold italic">후원은 더 좋은 기능을 만듭니다!</p>
             </div>
 
-            <div class="search-widget px-4 py-6 sm:px-6 text-black">
-                <p class="text-xs font-bold text-slate-800 mb-4 tracking-tight">전국 조사님들 장비 최저가 검색</p>
-                <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
+            <div class="search-widget px-4 py-6 sm:px-6 text-black relative ad-wrap Container">
+                <p class="text-xs font-bold text-slate-800 mb-4 tracking-tight border-b border-slate-100 pb-2">전국 조사님들 장비 최저가 검색</p>
+                <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2 text-black">
                     <input type="hidden" name="channel" value="user_side_view">
                     <input type="text" name="q" placeholder="시마노 릴 / 다이와 낚싯대" class="flex-grow p-3 border-2 border-slate-100 rounded-xl text-sm outline-none focus:border-blue-400 bg-slate-50 font-medium text-black">
                     <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm whitespace-nowrap active:scale-95 transition">검색</button>
                 </form>
-                <p class="text-[9px] text-slate-400 mt-5 leading-tight italic">
+                <p class="text-[9px] text-slate-400 mt-5 leading-tight italic border-t border-slate-100 pt-3">
                     "이 검색창을 통해 구매 시 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다."
                 </p>
             </div>
         </footer>
+
     </div>
+
+    <div id="photoModal" onclick="closeModal()">
+        <button onclick="closeModal()" class="absolute top-5 right-5 text-white/70 hover:text-white"><i data-lucide="x" class="w-8 h-8"></i></button>
+        <img id="modalImage" src="" alt="원본 인증샷" onclick="event.stopPropagation()"> </div>
 
     <script>
         let logs = [];
-        let currentFishImage = null;
+        let currentFishImage = null; // 사진 데이터를 임시로 저장할 변수
 
         try {
-            const savedLogs = localStorage.getItem('sg_fishing_logs_v2');
+            const savedLogs = localStorage.getItem('sg_fishing_logs_v1');
             if(savedLogs) logs = JSON.parse(savedLogs);
         } catch (e) { console.error("데이터 로드 에러"); }
 
         lucide.createIcons();
         renderAll();
 
-        // 💡 사진 읽기 로직 (DataURL 방식)
+        // 💡 [변경] 사진 데이터를 더 확실한 Base64로 인코딩하도록 로직 수정
         function previewImage(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // 용량 제한 (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert("사진 용량이 너무 큽니다 (최대 5MB)");
-                return;
-            }
-
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentFishImage = e.target.result; // Base64 이미지 주소 저장
+                currentFishImage = e.target.result; // Base64 이미지 데이터 저장
                 const preview = document.getElementById('imagePreview');
-                const container = document.getElementById('previewContainer');
+                const removeBtn = document.getElementById('removeImageBtn');
                 preview.src = currentFishImage;
-                container.classList.remove('hidden');
-                lucide.createIcons();
+                preview.classList.remove('hidden');
+                removeBtn.classList.remove('hidden');
             };
-            reader.readAsDataURL(file); // 💡 핵심: 텍스트가 아닌 이미지 주소로 읽기
+            // 💡 readAsText 대신 readAsDataURL 사용 (이미지 주소로 읽기)
+            reader.readAsDataURL(file); 
         }
 
+        // 추가한 사진 제거
         function removeImage() {
             currentFishImage = null;
-            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('imagePreview').src = "";
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('removeImageBtn').classList.add('hidden');
             document.querySelector('input[type="file"]').value = "";
         }
 
@@ -178,16 +202,16 @@
             const tide = document.getElementById('tideInput').value.trim();
             const bait = document.getElementById('baitInput').value.trim();
 
-            if(!fish || !loc) return alert("어종과 포인트를 입력해 주세요!");
+            if(!fish || !loc) return alert("어종과 포인트는 필수입니다!");
 
             const newLog = {
                 id: Date.now(),
                 fish, size, loc, tide, bait,
-                image: currentFishImage,
+                image: currentFishImage, // Base64 이미지 데이터 추가
                 date: new Date().toLocaleDateString()
             };
 
-            logs.unshift(newLog);
+            logs.unshift(newLog); // 최신 글이 맨 위로 오게
             saveData();
             clearInputs();
             renderAll();
@@ -196,23 +220,23 @@
         function renderAll() {
             const grid = document.getElementById('logList');
             if(logs.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-slate-400 text-center py-20 italic">아직 기록된 조행기가 없습니다.</p>';
+                grid.innerHTML = '<p class="col-span-full text-slate-400 text-center py-20 italic">아직 등록된 조행기가 없습니다.</p>';
             } else {
                 grid.innerHTML = logs.map((log, idx) => `
                     <div class="p-5 bg-slate-50 border border-slate-200 rounded-3xl relative text-left hover:border-blue-300 transition-colors shadow-sm text-black">
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${log.date}</span>
-                                <h3 class="text-xl font-extrabold text-slate-800 leading-none mt-1.5 text-black">${log.fish} <span class="text-sm font-normal text-blue-500">${log.size ? log.size+'cm' : ''}</span></h3>
+                                <h3 class="text-xl font-extrabold text-slate-800 leading-none mt-1.5">${log.fish} <span class="text-sm font-normal text-blue-500">${log.size ? log.size+'cm' : ''}</span></h3>
                             </div>
                             <button onclick="deleteLog(${idx})" class="text-slate-300 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-5 h-5 text-black"></i></button>
                         </div>
                         
-                        ${log.image ? `<div class="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white"><img src="${log.image}" class="w-full h-auto block object-contain" alt="인증샷"></div>` : ''}
+                        ${log.image ? `<div class="mb-4 overflow-hidden rounded-2xl border border-slate-100 bg-white cursor-pointer" onclick="openModal('${log.image}')"><img src="${log.image}" alt="${log.fish} 인증샷" class="w-full h-auto block object-contain"></div>` : ''}
 
-                        <div class="grid grid-cols-2 gap-2 mb-3 text-black">
+                        <div class="grid grid-cols-2 gap-2 mb-3">
                             <div class="text-[11px] font-semibold text-blue-900 bg-white px-3 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${log.loc}</div>
-                            <div class="text-[11px] font-semibold text-blue-900 bg-white px-3 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5"><i data-lucide="wind" class="w-3.5 h-3.5"></i> ${log.tide || '물때 미입력'}</div>
+                            <div class="text-[11px] font-semibold text-blue-900 bg-white px-3 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5"><i data-lucide="wind" class="w-3.5 h-3.5"></i> ${log.tide || '물때 미기입'}</div>
                         </div>
                         <div class="bg-white p-3 rounded-xl border border-blue-50">
                              <p class="text-[11px] text-slate-600 leading-relaxed text-black">
@@ -225,15 +249,32 @@
             lucide.createIcons();
         }
 
-        function clearInputs() {
-            ['fishNameInput', 'sizeInput', 'locationInput', 'tideInput', 'baitInput'].forEach(id => document.getElementById(id).value = '');
-            removeImage();
+        // 💡 [신규] 사진 확대 모달 열기
+        function openModal(imageSrc) {
+            const modal = document.getElementById('photoModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = imageSrc;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+            lucide.createIcons(); // X 버튼 아이콘 로딩
         }
 
-        function saveData() { try { localStorage.setItem('sg_fishing_logs_v2', JSON.stringify(logs)); } catch (e) { alert("저장공간 부족! 백업 기능을 이용해 주세요."); } }
+        // 💡 [신규] 사진 확대 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('photoModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // 배경 스크롤 허용
+        }
+
+        function clearInputs() {
+            ['fishNameInput', 'sizeInput', 'locationInput', 'tideInput', 'baitInput'].forEach(id => document.getElementById(id).value = '');
+            removeImage(); // 사진 추가 폼 초기화
+        }
+
+        function saveData() { try { localStorage.setItem('sg_fishing_logs_v1', JSON.stringify(logs)); } catch (e) { alert("저장공간 부족! 전체 백업 후 캐시를 정리하세요."); } }
         
         function deleteLog(idx) {
-            if(confirm("이 기록을 삭제하시겠습니까?")) {
+            if(confirm("진짜 삭제하시겠습니까?")) {
                 logs.splice(idx, 1);
                 saveData();
                 renderAll();
@@ -245,7 +286,7 @@
             const dataStr = JSON.stringify(logs, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `입질가드_전체백업.json`; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = `입질가드_출조기록.json`; a.click();
             URL.revokeObjectURL(url);
         }
 
@@ -261,7 +302,7 @@
                         saveData(); renderAll(); 
                         alert("복구 완료!"); 
                     }
-                } catch(e) { alert("파일 형식이 틀립니다."); }
+                } catch(e) { alert("파일 오류!"); }
             };
             reader.readAsText(file);
         }
