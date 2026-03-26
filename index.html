@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>입질 가드 (Fishing Log) - 고화질 저장 전용</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>입질 가드 (Fishing Log) - 메모리 제로 모드</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -18,7 +18,7 @@
         
         .input-text { color: #1e293b; font-weight: 700; outline: none; border: none; background: transparent; padding: 0;}
         
-        /* 💡 캡처 시 글자 짤림 방지용 고정 텍스트 스타일 */
+        /* 캡처 시 글자 짤림 방지용 고정 텍스트 스타일 */
         .rendering .photo-box { background: transparent !important; }
         .rendering .input-text { display: none !important; }
         .fixed-text { display: none; color: #1e293b; font-weight: 700; word-break: break-all; white-space: pre-wrap; }
@@ -102,27 +102,32 @@
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'});
 
+        // 💡 [메모리 제로 로직] 0.1초 즉시 삭제 청소부
+        let currentUrl = null;
+
         function loadFile(e) {
             const file = e.target.files[0];
             if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const max = 1200; 
-                    let w = img.width, h = img.height;
-                    if (w > h) { if (w > max) { h *= max/w; w = max; } }
-                    else { if (h > max) { w *= max/h; h = max; } }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.95);
-                    document.getElementById('viewImg').classList.remove('hidden');
-                    document.getElementById('uploadGuide').style.display = 'none';
-                };
-                img.src = ev.target.result;
+
+            const imgEl = document.getElementById('viewImg');
+            const uploadGuide = document.getElementById('uploadGuide');
+
+            // 💡 [청소] 이전 메모리 주소 즉시 파기 (찌꺼기 제거)
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
+            }
+
+            // 💡 [압축] 파일을 읽지 않고 메모리 주소만 생성 (가장 가벼운 방식)
+            currentUrl = URL.createObjectURL(file);
+            imgEl.src = currentUrl;
+            
+            imgEl.onload = function() {
+                imgEl.classList.remove('hidden');
+                uploadGuide.style.display = 'none';
             };
-            reader.readAsDataURL(file);
+            
+            // 인풋 초기화로 브라우저 점유 해제
+            e.target.value = "";
         }
 
         async function saveAndExport() {
@@ -138,34 +143,35 @@
 
             const area = document.getElementById('captureArea');
             
-            // 캡처 전에 입력 박스들의 글자를 고정 텍스트 박스로 복사
             document.getElementById('fish_fixed').innerText = fish.value || ' ';
             document.getElementById('size_fixed').innerText = size.value || '00';
             document.getElementById('loc_fixed').innerText = loc.value || ' ';
             document.getElementById('bait_fixed').innerText = bait.value || ' ';
             
-            // 캡처용 스타일 적용
             area.classList.add('rendering');
+            window.scrollTo(0, 0); 
 
-            // 초고화질 캡처
+            // 💡 고화질 저장
             const canvas = await html2canvas(area, { 
-                scale: 2, 
-                backgroundColor: '#ffffff'
+                scale: 2.5, 
+                backgroundColor: '#ffffff',
+                useCORS: true 
             });
 
-            // 캡처 끝났으니 입력창 원상복구
             area.classList.remove('rendering');
 
-            // 갤러리 다운로드
-            const cardImgData = canvas.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = `입질가드_${new Date().toISOString().slice(2,10)}_${fish.value}.png`;
-            link.href = cardImgData;
+            link.download = `입질가드_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
             link.click();
 
-            alert('형님! 완벽하게 갤러리에 저장했습니다! 🎣');
+            alert('형님! 인생 최대어 기록 갤러리에 저장했습니다! 🎣');
 
-            // 초기화
+            // 💡 저장 후 메모리 싹 비우고 초기화
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
+                currentUrl = null;
+            }
             [fish, size, loc, bait].forEach(i => i.value = '');
             imgEl.src = '';
             imgEl.classList.add('hidden');
