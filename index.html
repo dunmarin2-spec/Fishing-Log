@@ -11,12 +11,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        /* 💡 보관함 및 카드 스타일 */
+        /* 보관함 및 카드 스타일 */
         .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .photo-box { width: 100%; height: 50%; border-radius: 8px; overflow: hidden; background: #f1f5f9; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 💡 슬라이드 보관함 */
+        /* 슬라이드 보관함 */
         .archive-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 15px; padding: 10px 0; scrollbar-width: none; }
         .archive-container::-webkit-scrollbar { display: none; }
         .archive-item { min-width: 80%; scroll-snap-align: center; transition: 0.3s; position: relative; cursor: pointer; }
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="safe-bottom"></div>
-        </header>
+        </section>
 
         <button onclick="saveDiary()" class="w-full bg-blue-600 text-white font-black p-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition mb-10">
             <i data-lucide="download"></i> 조행기 저장 및 보관
@@ -95,7 +95,7 @@
     </div>
 
     <script>
-        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_diary_v19') || '[]');
+        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_diary_v20') || '[]');
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
         renderArchive();
@@ -142,7 +142,7 @@
                 img: imgData
             };
             diaryLogs.unshift(newEntry);
-            localStorage.setItem('ipjil_diary_v19', JSON.stringify(diaryLogs));
+            localStorage.setItem('ipjil_diary_v20', JSON.stringify(diaryLogs));
 
             alert('갤러리 저장 및 보관함 등록 완료! 🎣');
             renderArchive();
@@ -157,6 +157,7 @@
                 list.innerHTML = '<p class="w-full text-center py-10 text-slate-300 text-xs italic">보관함이 비어있습니다.</p>';
                 return;
             }
+            // 💡 [핵심 고친 점] onclick 이벤트를 이미지 자체에 걸어서 클릭 시 openFullscreen 함수가 실행되게 함
             list.innerHTML = diaryLogs.map(log => `
                 <div class="archive-item">
                     <img src="${log.img}" onclick="openFullscreen('${log.img}')" class="w-full rounded-2xl shadow-lg border border-slate-200">
@@ -182,7 +183,7 @@
         function deleteLog(id) {
             if(confirm('보관함에서 삭제할까요?')) {
                 diaryLogs = diaryLogs.filter(log => log.id !== id);
-                localStorage.setItem('ipjil_diary_v19', JSON.stringify(diaryLogs));
+                localStorage.setItem('ipjil_diary_v20', JSON.stringify(diaryLogs));
                 renderArchive();
             }
         }
