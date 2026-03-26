@@ -18,7 +18,6 @@
         .archive-item { min-width: 80%; scroll-snap-align: center; position: relative; cursor: pointer; }
         #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
         #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 10px; }
-        /* 💡 저장 시 입력창 텍스트 색상 강제 */
         .input-text { color: #1e293b !important; font-weight: 700; }
     </style>
 </head>
@@ -89,7 +88,6 @@
     <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
 
     <script>
-        // 💡 키 이름을 바꿔서 이전 데이터와 섞이지 않게 함
         let diaryLogs = JSON.parse(localStorage.getItem('ipjil_recent_v26') || '[]');
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
@@ -121,17 +119,25 @@
         async function saveAndExport() {
             const fish = document.getElementById('fish').value;
             const img = document.getElementById('viewImg').src;
-            if(!fish || !img) return alert('사진과 어종 필수!');
+            if(!fish || !img) return alert('사진과 어종은 필수입니다, 형님!');
 
+            // 원래 화면의 입력값들 미리 백업
+            const originalInputs = document.querySelectorAll('input, textarea');
             const area = document.getElementById('captureArea');
-            // 💡 캡처 시 입력창 글자 색상을 검정으로 강제 반영하기 위한 처리
+            
             const canvas = await html2canvas(area, { 
                 scale: 2, 
                 backgroundColor: '#ffffff',
                 onclone: (clonedDoc) => {
-                    // 💡 클론된 문서에서 입력창 텍스트가 잘 보이도록 강제 설정
-                    clonedDoc.querySelectorAll('input, textarea').forEach(el => {
+                    const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
+                    clonedInputs.forEach((el, index) => {
                         el.style.color = 'black';
+                        // 캡처용 가짜 화면에 글자 강제 주입
+                        if (el.tagName === 'TEXTAREA') {
+                            el.innerHTML = originalInputs[index].value;
+                        } else {
+                            el.setAttribute('value', originalInputs[index].value);
+                        }
                     });
                 }
             });
@@ -143,24 +149,31 @@
             link.href = cardImgData;
             link.click();
 
-            // 2. 보관함용 저화질 압축 (글자가 포함된 카드 이미지 그대로 저장!)
+            // 2. 보관함용 저화질/리사이즈 압축 (로컬스토리지 용량 초과 방지)
             const lowResCanvas = document.createElement('canvas');
             const ctx = lowResCanvas.getContext('2d');
-            lowResCanvas.width = canvas.width * 0.5;
-            lowResCanvas.height = canvas.height * 0.5;
+            const THUMB_WIDTH = 200; 
+            const thumbScale = THUMB_WIDTH / canvas.width;
+            lowResCanvas.width = THUMB_WIDTH;
+            lowResCanvas.height = canvas.height * thumbScale;
             ctx.drawImage(canvas, 0, 0, lowResCanvas.width, lowResCanvas.height);
-            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.5); 
+            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.3); 
 
-            diaryLogs.unshift({ id: Date.now(), img: lowResImg });
-            if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
-            localStorage.setItem('ipjil_recent_v26', JSON.stringify(diaryLogs));
-            
-            alert('저장 완료! 이제 Location 내용도 사진 속에 다 박혔습니다. 🎣');
-            renderArchive();
-            
-            document.querySelectorAll('input, textarea').forEach(i => i.value = '');
-            document.getElementById('viewImg').classList.add('hidden');
-            document.getElementById('uploadGuide').style.display = 'flex';
+            try {
+                diaryLogs.unshift({ id: Date.now(), img: lowResImg });
+                if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
+                localStorage.setItem('ipjil_recent_v26', JSON.stringify(diaryLogs));
+                
+                alert('저장 완료! Location 글자도 잘 박히고, 보관함에도 잘 들어갔습니다. 🎣');
+                renderArchive();
+                
+                document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+                document.getElementById('viewImg').classList.add('hidden');
+                document.getElementById('uploadGuide').style.display = 'flex';
+            } catch (e) {
+                alert('아이고 형님, 보관함 용량이 꽉 찼습니다! 이전 데이터를 비워주셔야 합니다.');
+                console.error(e);
+            }
         }
 
         function renderArchive() {
