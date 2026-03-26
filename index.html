@@ -14,7 +14,6 @@
         .photo-box { width: 100%; height: 50%; border-radius: 16px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         #viewImg { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
         
-        /* 보관함 스크롤 */
         .archive-container { display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px; scrollbar-width: none; -ms-overflow-style: none; }
         .archive-container::-webkit-scrollbar { display: none; }
         .archive-item { min-width: 120px; max-width: 120px; aspect-ratio: 9/14; flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.2s; }
@@ -25,13 +24,16 @@
         #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
         
         .input-text { color: #1e293b; font-weight: 700; }
+        
+        /* 💡 캡처용 가짜 텍스트 클래스 (잘림 방지) */
+        .mock-text { display: flex; color: #000000; word-break: break-all; white-space: pre-wrap; }
     </style>
 </head>
 <body class="py-6 px-4">
     <div class="max-w-md mx-auto min-h-screen">
         <header class="flex justify-between items-center mb-6 px-2">
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
-            <span class="text-xs bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full">v4.0 최적화</span>
+            <span class="text-xs bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-full">v5.0 완벽해결</span>
         </header>
 
         <section id="captureArea" class="diary-card mb-6 bg-white">
@@ -56,11 +58,11 @@
             </div>
 
             <div class="space-y-3 flex-grow text-black">
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 overflow-hidden min-h-[50px]">
                     <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Location</p>
                     <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[12px] bg-transparent border-none outline-none w-full p-0 text-black">
                 </div>
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 overflow-hidden min-h-[70px]">
                     <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">Notes</p>
                     <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[12px] bg-transparent border-none outline-none w-full h-12 resize-none leading-tight p-0 text-black"></textarea>
                 </div>
@@ -83,8 +85,7 @@
     <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
 
     <script>
-        // 💡 꼬여버린 예전 데이터 버리고 새 저장소 키(v4) 사용
-        const STORAGE_KEY = 'ipjil_recent_v4';
+        const STORAGE_KEY = 'ipjil_recent_v5';
         let diaryLogs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         
         lucide.createIcons();
@@ -125,60 +126,68 @@
                 return alert('형님, 사진이랑 어종은 꼭 넣어주십쇼!');
             }
 
-            // 💡 [핵심 해결 1] Location 및 모든 입력창 글자를 HTML 속성에 강제로 박아버립니다. (캡처 누락 원천 차단)
-            const inputs = [fish, size, loc, bait];
-            inputs.forEach(el => {
-                el.style.color = '#000000'; // 캡처 시 무조건 검은색으로 보이게 강제
-                if (el.tagName === 'INPUT') {
-                    el.setAttribute('value', el.value);
-                } else if (el.tagName === 'TEXTAREA') {
-                    el.innerHTML = el.value;
-                }
-            });
+            // 💡 [해결 1] 캡처 전 스크롤을 맨 위로 올려서 아래가 잘리는 현상 방지
+            window.scrollTo(0, 0);
 
             const area = document.getElementById('captureArea');
-            
-            // 원본 카드 캡처 (갤러리 저장용 - 고화질)
+            const inputs = [fish, size, loc, bait];
+            const replacements = [];
+
+            // 💡 [해결 2] 폰에서 글자가 짤리는 악질 버그를 잡기 위해, 입력창을 일반 텍스트 박스로 완벽히 교체
+            inputs.forEach(el => {
+                const mockDiv = document.createElement('div');
+                mockDiv.className = el.className + ' mock-text'; 
+                mockDiv.style.minHeight = el.offsetHeight + 'px';
+                mockDiv.style.alignItems = el.tagName === 'TEXTAREA' ? 'flex-start' : 'center';
+                mockDiv.innerText = el.value || ' '; // 빈칸 유지
+                
+                el.parentNode.insertBefore(mockDiv, el);
+                el.style.display = 'none'; // 원본 숨기기
+                replacements.push({ original: el, mock: mockDiv });
+            });
+
+            // 캡처 진행
             const canvas = await html2canvas(area, { 
                 scale: 2, 
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                windowWidth: document.documentElement.offsetWidth,
+                windowHeight: document.documentElement.offsetHeight // 화면 전체 높이 인식
             });
-            const cardImgData = canvas.toDataURL('image/png');
 
-            // 갤러리에 팡! 저장
+            // 캡처 끝났으니 입력창 원상복구
+            replacements.forEach(item => {
+                item.original.style.display = '';
+                item.mock.remove();
+            });
+
+            // 💡 [해결 3] 다운로드 때문에 스크립트가 뻗기 전에 무조건 '보관함'부터 저장합니다!!
+            const lowResCanvas = document.createElement('canvas');
+            const ctx = lowResCanvas.getContext('2d');
+            const THUMB_WIDTH = 300; 
+            lowResCanvas.width = THUMB_WIDTH;
+            lowResCanvas.height = canvas.height * (THUMB_WIDTH / canvas.width);
+            ctx.drawImage(canvas, 0, 0, lowResCanvas.width, lowResCanvas.height);
+            
+            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.6); 
+
+            // 보관함 DB 저장 및 화면 갱신
+            diaryLogs.unshift({ id: Date.now(), img: lowResImg });
+            if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(diaryLogs));
+            
+            renderArchive(); // 보관함 바로 띄우기
+
+            // 보관함에 들어간 거 확실히 확인하고, 마지막으로 갤러리 다운로드
+            const cardImgData = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.download = `입질가드_${new Date().toISOString().slice(2,10)}_${fish.value}.png`;
             link.href = cardImgData;
             link.click();
 
-            // 💡 [핵심 해결 2] 보관함 썸네일은 크기를 200px로 확 줄여서 용량 폭발(저장 튕김 현상) 방지
-            const lowResCanvas = document.createElement('canvas');
-            const ctx = lowResCanvas.getContext('2d');
-            const THUMB_WIDTH = 200; 
-            const thumbScale = THUMB_WIDTH / canvas.width;
-            lowResCanvas.width = THUMB_WIDTH;
-            lowResCanvas.height = canvas.height * thumbScale;
-            ctx.drawImage(canvas, 0, 0, lowResCanvas.width, lowResCanvas.height);
-            
-            // 화질 압축률 0.5로 세팅 (로컬스토리지 절대 안 터집니다)
-            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.5); 
+            alert('형님! 보관함 저장 완료하고 갤러리에도 짱짱하게 박혔습니다! 🎣');
 
-            // 보관함 데이터에 넣기
-            diaryLogs.unshift({ id: Date.now(), img: lowResImg });
-            if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10); // 최대 10개만 유지
-            
-            // 로컬 스토리지에 무사히 저장
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(diaryLogs));
-            
-            alert('저장 끝났습니다 형님! Location도 쾅 박혔고, 보관함에도 쏙 들어갔습니다. 🎣');
-            renderArchive();
-            
-            // 저장 후 입력창 싹 비우기
-            inputs.forEach(el => {
-                el.value = '';
-                el.removeAttribute('value');
-                if (el.tagName === 'TEXTAREA') el.innerHTML = '';
-            });
+            // 입력창 초기화
+            inputs.forEach(el => el.value = '');
             imgEl.src = '';
             imgEl.classList.add('hidden');
             document.getElementById('uploadGuide').style.display = 'flex';
