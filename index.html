@@ -3,29 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>입질 가드 Pro (Fishing Log)</title>
+    <title>입질 가드 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        /* 💡 무적 확대 오버레이 */
-        #zoomOverlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: rgba(0,0,0,0.95); z-index: 99999; justify-content: center; align-items: center; cursor: pointer;
-        }
-        #zoomOverlay.active { display: flex; }
-        #zoomOverlay img { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,1); }
-
-        /* 사진 가로 스크롤 레이아웃 */
+        /* 사진 가로 스크롤 */
         .img-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
         .img-scroll::-webkit-scrollbar { display: none; }
-        /* 💡 사진 클릭 영역을 <div>로 감싸서 터치 인식률 100%로 끌어올림 */
-        .thumb-wrap { width: 150px; height: 150px; flex-shrink: 0; cursor: pointer; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
-        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; } /* 이미지는 터치 무시, 부모 div가 터치 받음 */
+        .thumb-img { width: 140px; height: 140px; object-fit: cover; border-radius: 16px; flex-shrink: 0; border: 1px solid #e2e8f0; cursor: zoom-in; }
         
-        /* 💰 수익화 버튼 스타일 */
+        /* 💡 팝업창 다 버리고, 이 CSS 한 방으로 사진을 직접 화면에 꽉 채웁니다 */
+        .fullscreen-magic {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            object-fit: contain !important;
+            background-color: rgba(0,0,0,0.95) !important;
+            z-index: 999999 !important;
+            margin: 0 !important; padding: 20px !important;
+            border-radius: 0 !important;
+            cursor: zoom-out !important;
+        }
+
+        /* 💰 수익화 버튼 */
         .pay-btn { background-color: #FAE100; color: #3C1E1E !important; display: inline-flex; align-items: center; justify-content: center; padding: 14px 24px; border-radius: 16px; font-weight: 800; gap: 8px; min-width: 260px; box-shadow: 0 4px 15px rgba(250,225,0,0.3); font-size: 15px; text-decoration: none !important; }
         .pay-btn:active { transform: scale(0.96); }
     </style>
@@ -45,19 +48,19 @@
             <aside class="lg:col-span-4 space-y-4">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800"><i data-lucide="camera" class="text-blue-500"></i> 월척 인증샷 등록</h2>
-                    <label class="block bg-blue-50 text-blue-700 border-2 border-dashed border-blue-200 p-6 rounded-2xl text-center cursor-pointer mb-4 hover:bg-blue-100 transition">
-                        <i data-lucide="image-plus" class="mx-auto mb-1 w-6 h-6"></i> <span class="text-xs font-bold">사진 여러 장 (한번에 선택)</span>
+                    <label class="block bg-blue-50 text-blue-700 border-2 border-dashed border-blue-200 p-6 rounded-2xl text-center cursor-pointer mb-4">
+                        <i data-lucide="image-plus" class="mx-auto mb-1 w-6 h-6"></i> <span class="text-xs font-bold">사진 추가</span>
                         <input type="file" accept="image/*" multiple class="hidden" onchange="handleFiles(event)">
                     </label>
                     <div id="formPreview" class="img-scroll mb-4"></div>
                     
                     <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input id="fish" type="text" placeholder="어종" class="p-3 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-400 text-black">
-                        <input id="size" type="text" placeholder="크기(cm)" class="p-3 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-400 text-black">
+                        <input id="fish" type="text" placeholder="어종" class="p-3 border rounded-xl bg-slate-50 text-sm outline-none text-black">
+                        <input id="size" type="text" placeholder="크기(cm)" class="p-3 border rounded-xl bg-slate-50 text-sm outline-none text-black">
                     </div>
-                    <input id="loc" type="text" placeholder="포인트 명칭" class="w-full p-3 border rounded-xl bg-slate-50 text-sm mb-2 text-black">
-                    <input id="tide" type="text" placeholder="물때 (예: 4물)" class="w-full p-3 border rounded-xl bg-slate-50 text-sm mb-2 text-black">
-                    <textarea id="bait" placeholder="채비 및 미끼 노하우" class="w-full p-3 border rounded-xl bg-slate-50 text-sm h-20 mb-4 text-black"></textarea>
+                    <input id="loc" type="text" placeholder="포인트" class="w-full p-3 border rounded-xl bg-slate-50 text-sm mb-2 text-black">
+                    <input id="tide" type="text" placeholder="물때" class="w-full p-3 border rounded-xl bg-slate-50 text-sm mb-2 text-black">
+                    <textarea id="bait" placeholder="채비 및 미끼" class="w-full p-3 border rounded-xl bg-slate-50 text-sm h-20 mb-4 text-black"></textarea>
                     <button onclick="addLog()" class="w-full bg-blue-600 text-white font-bold p-4 rounded-xl shadow-lg active:scale-95 transition">조과 저장하기</button>
                 </div>
             </aside>
@@ -70,41 +73,25 @@
 
         <footer class="mt-16 text-center border-t border-slate-200 pt-10 pb-12">
             <div class="mb-12">
-                <p class="text-sm font-bold text-slate-600 mb-5 tracking-tight px-4">전국의 조사님들을 위해 앱을 만들었습니다!</p>
-                <div class="flex justify-center">
-                    <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="pay-btn">
-                        <span style="background: #3C1E1E; color: #FAE100; padding: 2px 6px; border-radius: 5px; font-size: 11px; font-weight: 900;">PAY</span>
-                        <span>커피 한 잔 후원하기</span>
-                    </a>
-                </div>
+                <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="pay-btn">
+                    <span style="background: #3C1E1E; color: #FAE100; padding: 2px 6px; border-radius: 5px; font-size: 11px; font-weight: 900;">PAY</span>
+                    <span>커피 한 잔 후원하기</span>
+                </a>
             </div>
-
             <div class="max-w-[500px] mx-auto bg-white border-2 border-blue-100 rounded-2xl overflow-hidden shadow-sm">
-                <div class="bg-blue-50 py-2 px-4 border-b border-blue-100 text-left">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase">Fishing Gear Search</span>
-                </div>
                 <div class="p-6">
-                    <p class="text-xs font-bold text-slate-700 mb-4 text-black text-left">낚싯대, 릴, 아이스박스 최저가 검색</p>
                     <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
                         <input type="hidden" name="channel" value="user_side_view">
-                        <input type="text" name="q" placeholder="시마노 / 다이와 낚시용품" class="flex-grow p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 text-black outline-none focus:ring-1 focus:ring-blue-400">
+                        <input type="text" name="q" placeholder="시마노 / 다이와 낚시용품" class="flex-grow p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 text-black outline-none">
                         <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm whitespace-nowrap active:scale-95 transition">검색</button>
                     </form>
                 </div>
-                <p class="text-[8px] text-slate-400 px-6 pb-4 leading-tight text-left italic">
-                    "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
-                </p>
             </div>
         </footer>
     </div>
 
-    <div id="zoomOverlay" onclick="closeZoom()">
-        <img id="zoomImg" src="">
-        <div class="absolute top-6 right-6 text-white opacity-50"><i data-lucide="x" class="w-10 h-10"></i></div>
-    </div>
-
     <script>
-        let logs = JSON.parse(localStorage.getItem('fishing_v8') || '[]');
+        let logs = JSON.parse(localStorage.getItem('fishing_v9') || '[]');
         let tempImgs = [];
         lucide.createIcons(); renderLogs();
 
@@ -122,7 +109,7 @@
             div.innerHTML = tempImgs.map((img, i) => `
                 <div class="relative flex-shrink-0">
                     <img src="${img}" class="w-16 h-16 object-cover rounded-xl border">
-                    <button onclick="tempImgs.splice(${i},1);renderFormPreview()" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-md"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    <button onclick="tempImgs.splice(${i},1);renderFormPreview()" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"><i data-lucide="x" class="w-3 h-3"></i></button>
                 </div>
             `).join('');
             lucide.createIcons();
@@ -134,11 +121,8 @@
             if(!f || !l) return alert('어종과 포인트는 필수입니다!');
             logs.unshift({
                 id: Date.now(), fish: f, loc: l,
-                size: document.getElementById('size').value,
-                tide: document.getElementById('tide').value,
-                bait: document.getElementById('bait').value,
-                imgs: [...tempImgs],
-                date: new Date().toLocaleDateString()
+                size: document.getElementById('size').value, tide: document.getElementById('tide').value, bait: document.getElementById('bait').value,
+                imgs: [...tempImgs], date: new Date().toLocaleDateString()
             });
             save(); tempImgs = []; document.querySelectorAll('input, textarea').forEach(el => el.value = '');
             renderFormPreview(); renderLogs();
@@ -146,47 +130,28 @@
 
         function renderLogs() {
             const list = document.getElementById('logList');
-            if(!logs.length) return list.innerHTML = '<p class="text-center py-20 text-slate-400 italic">기록된 손맛이 없습니다.</p>';
+            if(!logs.length) return list.innerHTML = '<p class="text-center py-20 text-slate-400">기록된 손맛이 없습니다.</p>';
             list.innerHTML = logs.map((log, idx) => `
-                <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-sm transition hover:border-blue-200">
+                <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-sm transition">
                     <div class="flex justify-between items-start mb-3">
                         <div><p class="text-[10px] text-blue-500 font-bold">${log.date}</p><h3 class="font-extrabold text-xl text-slate-800 text-black">${log.fish} <span class="text-sm font-normal text-blue-400">${log.size}cm</span></h3></div>
                         <button onclick="deleteLog(${idx})" class="text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-5 h-5 text-black"></i></button>
                     </div>
                     
                     <div class="img-scroll mb-4">
-                        ${log.imgs.map((src, imgIdx) => `
-                            <div class="thumb-wrap shadow-sm" onclick="startZoom(${idx}, ${imgIdx})">
-                                <img src="${src}" alt="인증샷">
-                            </div>
-                        `).join('')}
+                        ${log.imgs.map(src => `<img src="${src}" onclick="this.classList.toggle('fullscreen-magic')" class="thumb-img shadow-sm" alt="인증샷">`).join('')}
                     </div>
 
                     <div class="space-y-2 text-black">
                         <p class="text-[11px] font-bold text-slate-600 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${log.loc} | <i data-lucide="wind" class="w-3 h-3"></i> ${log.tide || '-'}</p>
-                        <div class="bg-white p-3 rounded-xl border border-slate-100 text-[11px] text-slate-500 text-black leading-relaxed"><b>채비:</b> ${log.bait || '정보 없음'}</div>
                     </div>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
-        // 💡 [핵심 해결책] 번호표를 받아서 원본 데이터를 찾아 띄움!
-        function startZoom(logIdx, imgIdx) {
-            const overlay = document.getElementById('zoomOverlay');
-            const targetImgSrc = logs[logIdx].imgs[imgIdx]; // 데이터 창고에서 꺼내옴
-            document.getElementById('zoomImg').src = targetImgSrc;
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeZoom() {
-            document.getElementById('zoomOverlay').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
         function deleteLog(i) { if(confirm('삭제하시겠습니까?')) { logs.splice(i,1); save(); renderLogs(); } }
-        function save() { try { localStorage.setItem('fishing_v8', JSON.stringify(logs)); } catch(e) { alert('사진 용량 초과! 상단 백업 버튼을 누른 후 오래된 조과를 지우세요.'); } }
+        function save() { try { localStorage.setItem('fishing_v9', JSON.stringify(logs)); } catch(e) { alert('사진 용량 초과! 백업 후 데이터를 정리하세요.'); } }
         function exportData() {
             const blob = new Blob([JSON.stringify(logs)], {type:'application/json'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '입질가드_데이터.json'; a.click();
