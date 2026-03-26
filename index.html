@@ -3,84 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>입질 가드 (Fishing Log)</title>
+    <title>입질 가드 (Fishing Log) - PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
-        .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 20px; }
-        .photo-box { width: 100%; height: 50%; border-radius: 12px; overflow: hidden; background: #f1f5f9; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; padding-bottom: 30px;}
+        .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 24px; position: relative;}
+        .photo-box { width: 100%; height: 50%; border-radius: 16px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         #viewImg { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
-        .archive-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 15px; padding: 10px 0; scrollbar-width: none; }
+        
+        /* 보관함 스타일 개선 */
+        .archive-container { display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px; scrollbar-width: none; -ms-overflow-style: none; }
         .archive-container::-webkit-scrollbar { display: none; }
-        .archive-item { min-width: 80%; scroll-snap-align: center; position: relative; cursor: pointer; }
-        #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
-        #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 10px; }
-        .input-text { color: #1e293b !important; font-weight: 700; }
+        .archive-item { min-width: 140px; max-width: 140px; aspect-ratio: 9/14; flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.2s; }
+        .archive-item:active { transform: scale(0.95); }
+        .archive-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+        #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 12px; box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+        
+        .input-text { color: #1e293b; font-weight: 700; }
+        /* 캡처 시 placeholder 숨기기 */
+        .rendering .input-text::placeholder { color: transparent !important; }
     </style>
 </head>
 <body class="py-6 px-4">
     <div class="max-w-md mx-auto min-h-screen">
-        <header class="text-center mb-6">
+        <header class="flex justify-between items-center mb-6 px-2">
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
+            <span class="text-xs bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full">v2.1 HQ</span>
         </header>
 
-        <section id="captureArea" class="diary-card mb-6 shadow-2xl">
+        <section id="captureArea" class="diary-card mb-6">
             <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2">
                 <div>
                     <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5"></p>
-                    <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase bg-transparent border-none outline-none w-32">
+                    <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase bg-transparent border-none outline-none w-32 p-0">
                 </div>
                 <div class="flex items-baseline text-blue-600 font-bold italic">
-                    <input type="text" id="size" placeholder="00" class="input-text text-3xl bg-transparent border-none outline-none w-12 text-right">
-                    <span>CM</span>
+                    <input type="text" id="size" placeholder="00" class="input-text text-4xl bg-transparent border-none outline-none w-14 text-right p-0">
+                    <span class="text-xl ml-1">CM</span>
                 </div>
             </div>
             
             <div class="photo-box" onclick="document.getElementById('fileInput').click()">
                 <div id="uploadGuide" class="text-slate-300 flex flex-col items-center">
-                    <i data-lucide="camera"></i><p class="text-[9px] font-bold mt-1 text-slate-400">사진 등록</p>
+                    <i data-lucide="camera" class="w-8 h-8"></i>
+                    <p class="text-[10px] font-bold mt-1 text-slate-400">사진 등록</p>
                 </div>
                 <img id="viewImg" class="hidden">
                 <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="loadFile(event)">
             </div>
 
             <div class="space-y-3 flex-grow text-black">
-                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 overflow-hidden">
-                    <p class="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Location</p>
-                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[11px] bg-transparent border-none outline-none w-full text-black">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 overflow-hidden">
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Location</p>
+                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[12px] bg-transparent border-none outline-none w-full p-0 text-black">
                 </div>
-                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 overflow-hidden">
-                    <p class="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Notes</p>
-                    <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[11px] bg-transparent border-none outline-none w-full h-10 resize-none leading-tight text-black"></textarea>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 overflow-hidden">
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">Notes</p>
+                    <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[12px] bg-transparent border-none outline-none w-full h-12 resize-none leading-tight p-0 text-black"></textarea>
                 </div>
             </div>
-            <div class="h-10"></div>
+            <p class="text-[7px] text-center text-slate-300 mt-4 italic">Powered by Ipjil Guard</p>
         </section>
 
-        <button onclick="saveAndExport()" class="w-full bg-blue-600 text-white font-black p-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition mb-10 text-black">
-            <i data-lucide="download"></i> 조행기 저장 및 보관
+        <button onclick="saveAndExport()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition mb-10 text-lg">
+            <i data-lucide="download"></i> 조행기 저장 및 고화질 보관
         </button>
 
-        <div class="text-center mb-10">
-            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-4 py-2 rounded-xl font-bold text-xs">
-                <span>PAY</span> 커피 후원하기
+        <div class="grid grid-cols-2 gap-3 mb-10">
+            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="flex items-center justify-center gap-2 bg-[#FAE100] text-[#3C1E1E] p-3 rounded-xl font-bold text-xs shadow">
+                PAY 커피 후원
+            </a>
+            <a href="https://www.coupang.com/np/search?channel=user_side_view&q=%EB%82%9A%EC%8B%9C%EC%9A%A9%ED%92%88" target="_blank" class="flex items-center justify-center gap-2 bg-slate-800 text-white p-3 rounded-xl font-bold text-xs shadow">
+                낚시용품 최저가
             </a>
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-10">
-            <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
-                <input type="hidden" name="channel" value="user_side_view">
-                <input type="text" name="q" placeholder="낚시용품 최저가 검색" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none">
-                <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl font-bold text-xs">검색</button>
-            </form>
-            <p class="text-[8px] text-slate-400 mt-2 italic">"이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다."</p>
-        </div>
-
-        <div class="border-t border-slate-200 pt-6 text-black">
-            <h2 class="text-lg font-black text-slate-800 mb-2">최근 조행기 (10개)</h2>
+        <div class="border-t border-slate-200 pt-6">
+            <div class="flex justify-between items-center mb-3 px-1">
+                <h2 class="text-lg font-black text-slate-800">최근 조행기 보관함 <span class="text-sm text-slate-400">(HQ 5개)</span></h2>
+                <button onclick="clearArchive()" class="text-xs text-rose-500 font-bold">전체 삭제</button>
+            </div>
             <div id="archiveList" class="archive-container"></div>
         </div>
     </div>
@@ -88,11 +95,16 @@
     <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
 
     <script>
-        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_recent_v26') || '[]');
+        // 💡 화질 개선으로 인한 용량 증가로 저장 개수 5개로 제한, 키 변경
+        const STORAGE_KEY = 'ipjil_recent_hq_v3';
+        const MAX_LOGS = 5;
+        let diaryLogs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        
         lucide.createIcons();
-        document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
+        document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'});
         renderArchive();
 
+        // 사진 로드 (기존 동일)
         function loadFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -101,13 +113,13 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const max = 1000;
+                    const max = 1200; // 원본화질 살짝 업
                     let w = img.width, h = img.height;
                     if (w > h) { if (w > max) { h *= max/w; w = max; } }
                     else { if (h > max) { w *= max/h; h = max; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.9);
+                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.92);
                     document.getElementById('viewImg').classList.remove('hidden');
                     document.getElementById('uploadGuide').style.display = 'none';
                 };
@@ -116,78 +128,119 @@
             reader.readAsDataURL(file);
         }
 
+        // 💡 핵심: 저장 및 고화질 썸네일 생성
         async function saveAndExport() {
             const fish = document.getElementById('fish').value;
+            const loc = document.getElementById('loc').value; // Location 값 체크용
             const img = document.getElementById('viewImg').src;
-            if(!fish || !img) return alert('사진과 어종은 필수입니다, 형님!');
+            
+            if(!fish || !img) return alert('형님, 사진이랑 어종은 꼭 넣으셔야죠!');
 
-            // 원래 화면의 입력값들 미리 백업
-            const originalInputs = document.querySelectorAll('input, textarea');
             const area = document.getElementById('captureArea');
             
+            // 💡 [해결] 캡처 전, 입력창들을 실제 텍스트 요소로 교체하여 글자가 100% 박히게 함
+            const inputsToReplace = area.querySelectorAll('input[type="text"], textarea');
+            const originalValues = [];
+            
+            // 캡처용 스타일 클래스 추가
+            area.classList.add('rendering');
+
+            // 1. input을 static text로 잠시 변경
+            inputsToReplace.forEach(input => {
+                originalValues.push({el: input, parent: input.parentNode, next: input.nextSibling, val: input.value, style: input.getAttribute('class')});
+                
+                const textSpan = document.createElement('span');
+                textSpan.innerText = input.value || " "; // 빈값이어도 영역 차지
+                // 기존 input 스타일과 최대한 비슷하게 복사
+                textSpan.setAttribute('class', style = input.getAttribute('class'));
+                textSpan.style.display = 'inline-block';
+                textSpan.style.minHeight = input.offsetHeight + 'px';
+                textSpan.style.color = '#1e293b'; // 검정색 강제
+                
+                input.parentNode.insertBefore(textSpan, input);
+                input.style.display = 'none'; // 원본 input 숨김
+            });
+
+            // 2. 캡처 실시 (scale 3으로 극강 화질)
             const canvas = await html2canvas(area, { 
-                scale: 2, 
+                scale: 3, 
                 backgroundColor: '#ffffff',
-                onclone: (clonedDoc) => {
-                    const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
-                    clonedInputs.forEach((el, index) => {
-                        el.style.color = 'black';
-                        // 캡처용 가짜 화면에 글자 강제 주입
-                        if (el.tagName === 'TEXTAREA') {
-                            el.innerHTML = originalInputs[index].value;
-                        } else {
-                            el.setAttribute('value', originalInputs[index].value);
-                        }
-                    });
-                }
+                useCORS: true, // 외부에셋 혹시 있으면 허용
+                logging: false,
             });
             const cardImgData = canvas.toDataURL('image/png');
 
-            // 1. 갤러리 저장
+            // 3. 원본 input 복원 및 캡처용 요소 삭제
+            area.classList.remove('rendering');
+            area.querySelectorAll('span.input-text').forEach(span => span.remove()); // 캡처용 span 삭제
+            inputsToReplace.forEach(input => input.style.display = ''); // 원본 input 표시
+
+            // 4. 갤러리 저장 (원본화질)
             const link = document.createElement('a');
-            link.download = `입질가드_${fish}.png`;
+            link.download = `입질가드_${new Date().toISOString().slice(2,10)}_${fish}.png`;
             link.href = cardImgData;
             link.click();
 
-            // 2. 보관함용 저화질/리사이즈 압축 (로컬스토리지 용량 초과 방지)
+            // 5. [해결] 보관함용 **고화질** 썸네일 생성 (용량은 좀 크지만 화질 우선)
             const lowResCanvas = document.createElement('canvas');
             const ctx = lowResCanvas.getContext('2d');
-            const THUMB_WIDTH = 200; 
+            
+            // 썸네일 가로크기를 200px -> 600px로 3배 뻥튀기
+            const THUMB_WIDTH = 600; 
             const thumbScale = THUMB_WIDTH / canvas.width;
             lowResCanvas.width = THUMB_WIDTH;
             lowResCanvas.height = canvas.height * thumbScale;
+            
+            // 이미지 부드럽게 만드는 처리
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
             ctx.drawImage(canvas, 0, 0, lowResCanvas.width, lowResCanvas.height);
-            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.3); 
+            
+            // 압축률도 0.3 -> 0.7로 확 올려서 쨍하게
+            const lowResImg = lowResCanvas.toDataURL('image/jpeg', 0.7); 
 
+            // 6. 보관함 저장
             try {
                 diaryLogs.unshift({ id: Date.now(), img: lowResImg });
-                if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
-                localStorage.setItem('ipjil_recent_v26', JSON.stringify(diaryLogs));
+                // 5개까지만 보관
+                if(diaryLogs.length > MAX_LOGS) diaryLogs = diaryLogs.slice(0, MAX_LOGS);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(diaryLogs));
                 
-                alert('저장 완료! Location 글자도 잘 박히고, 보관함에도 잘 들어갔습니다. 🎣');
+                alert('갤러리에 원본 저장! 보관함에도 쨍하게 박아놨습니다, 형님! 🎣');
                 renderArchive();
                 
+                // 입력창 초기화
                 document.querySelectorAll('input, textarea').forEach(i => i.value = '');
                 document.getElementById('viewImg').classList.add('hidden');
                 document.getElementById('uploadGuide').style.display = 'flex';
+                
             } catch (e) {
-                alert('아이고 형님, 보관함 용량이 꽉 찼습니다! 이전 데이터를 비워주셔야 합니다.');
+                alert('아이고 형님, 화질을 높였더니 보관함이 꽉 찼네요. 안 쓰는 사진 좀 지워주십쇼!');
                 console.error(e);
             }
         }
 
+        // 보관함 렌더링 (스타일 개선)
         function renderArchive() {
             const list = document.getElementById('archiveList');
             if(diaryLogs.length === 0) {
-                list.innerHTML = '<p class="w-full text-center py-10 text-slate-300 text-xs italic text-black">보관함이 비어있습니다.</p>';
+                list.innerHTML = '<div class="w-full text-center py-12 text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl"><i data-lucide="fish" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><p class="text-xs font-bold">보관함이 비어있습니다.</p></div>';
+                lucide.createIcons();
                 return;
             }
             list.innerHTML = diaryLogs.map(log => `
                 <div class="archive-item">
-                    <img src="${log.img}" onclick="openFullscreen('${log.img}')" class="w-full rounded-2xl shadow-lg border border-slate-200">
+                    <img src="${log.img}" onclick="openFullscreen('${log.img}')">
                 </div>
             `).join('');
-            lucide.createIcons();
+        }
+
+        function clearArchive() {
+            if(!confirm('형님, 보관함 싹 다 비우실랍니까?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            diaryLogs = [];
+            renderArchive();
         }
 
         function openFullscreen(src) {
