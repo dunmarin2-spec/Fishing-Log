@@ -3,43 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>입질 가드 (Fishing Log) - Basic</title>
+    <title>입질 가드 (Fishing Log) - 고화질 저장 전용</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; padding-bottom: 30px;}
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        
         .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 24px; position: relative;}
+        
         .photo-box { width: 100%; height: 50%; border-radius: 16px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         #viewImg { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
         
-        .archive-container { display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px; scrollbar-width: none; -ms-overflow-style: none; }
-        .archive-container::-webkit-scrollbar { display: none; }
-        .archive-item { min-width: 120px; max-width: 120px; aspect-ratio: 9/14; flex-shrink: 0; position: relative; cursor: pointer; }
-        .archive-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-text { color: #1e293b; font-weight: 700; outline: none; border: none; background: transparent; padding: 0;}
         
-        #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
-        #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 12px; }
-        
-        .input-text { color: #1e293b; font-weight: 700; }
+        /* 💡 캡처 시 글자 짤림 방지용 고정 텍스트 스타일 */
+        .rendering .photo-box { background: transparent !important; }
+        .rendering .input-text { display: none !important; }
+        .fixed-text { display: none; color: #1e293b; font-weight: 700; word-break: break-all; white-space: pre-wrap; }
+        .rendering .fixed-text { display: block !important; }
     </style>
 </head>
-<body class="py-6 px-4">
+<body class="py-10 px-4">
     <div class="max-w-md mx-auto min-h-screen">
-        <header class="flex justify-between items-center mb-6 px-2">
+        <header class="text-center mb-8">
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
-            <span class="text-xs bg-slate-200 text-slate-700 font-bold px-3 py-1 rounded-full">Basic Mode</span>
+            <p class="text-xs text-slate-400 mt-1">갤러리 고화질 저장 전용 v2.0</p>
         </header>
 
-        <section id="captureArea" class="diary-card mb-6 bg-white">
+        <section id="captureArea" class="diary-card mb-8 bg-white">
             <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2">
                 <div>
                     <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5"></p>
-                    <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase bg-transparent border-none outline-none w-32 p-0">
+                    <div class="relative">
+                        <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase w-32">
+                        <div id="fish_fixed" class="fixed-text text-xl italic uppercase w-32"></div>
+                    </div>
                 </div>
                 <div class="flex items-baseline text-blue-600 font-bold italic">
-                    <input type="text" id="size" placeholder="00" class="input-text text-4xl bg-transparent border-none outline-none w-14 text-right p-0">
+                    <div class="relative flex items-baseline">
+                        <input type="text" id="size" placeholder="00" class="input-text text-4xl w-14 text-right">
+                        <div id="size_fixed" class="fixed-text text-4xl w-14 text-right"></div>
+                    </div>
                     <span class="text-xl ml-1">CM</span>
                 </div>
             </div>
@@ -54,38 +60,47 @@
             </div>
 
             <div class="space-y-3 flex-grow text-black">
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 overflow-hidden min-h-[50px]">
                     <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Location</p>
-                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[12px] bg-transparent border-none outline-none w-full p-0 text-black">
+                    <div class="relative">
+                        <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[12px] w-full text-black">
+                        <div id="loc_fixed" class="fixed-text text-[12px] w-full text-black"></div>
+                    </div>
                 </div>
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 overflow-hidden min-h-[70px]">
                     <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">Notes</p>
-                    <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[12px] bg-transparent border-none outline-none w-full h-12 resize-none leading-tight p-0 text-black"></textarea>
+                    <div class="relative">
+                        <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[12px] w-full h-12 resize-none leading-tight text-black"></textarea>
+                        <div id="bait_fixed" class="fixed-text text-[12px] w-full h-12 resize-none leading-tight text-black"></div>
+                    </div>
                 </div>
             </div>
             <p class="text-[7px] text-center text-slate-300 mt-4 italic">Powered by Ipjil Guard</p>
         </section>
 
-        <button onclick="saveAndExport()" class="w-full bg-slate-800 text-white font-black p-5 rounded-2xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition mb-10 text-lg">
-            <i data-lucide="download"></i> 기본 저장 모드
+        <button onclick="saveAndExport()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl shadow-lg flex items-center justify-center gap-3 active:scale-95 transition text-lg mb-8">
+            <i data-lucide="download" class="w-6 h-6"></i> 갤러리에 조행기 초고화질 저장
         </button>
 
-        <div class="border-t border-slate-200 pt-6">
-            <h2 class="text-lg font-black text-slate-800 mb-3 px-1">최근 조행기 보관함</h2>
-            <div id="archiveList" class="archive-container"></div>
+        <div class="text-center mb-8">
+            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-6 py-3 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition">
+                <span>PAY</span> 커피 후원하기 ☕
+            </a>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-10">
+            <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
+                <input type="hidden" name="channel" value="user_side_view">
+                <input type="text" name="q" placeholder="낚시용품 최저가 검색" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none text-black">
+                <button type="submit" class="bg-slate-800 text-white px-5 rounded-xl font-bold text-xs active:scale-95 transition">검색</button>
+            </form>
+            <p class="text-[9px] text-slate-400 mt-3 text-center">"이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다."</p>
         </div>
     </div>
 
-    <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
-
     <script>
-        // 💡 아예 꼬이지 않게 새로운 백지 상태의 저장소 사용
-        const STORAGE_KEY = 'ipjil_basic_v1';
-        let diaryLogs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        
         lucide.createIcons();
-        document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
-        renderArchive();
+        document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'});
 
         function loadFile(e) {
             const file = e.target.files[0];
@@ -95,13 +110,13 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const max = 1000;
+                    const max = 1200; 
                     let w = img.width, h = img.height;
                     if (w > h) { if (w > max) { h *= max/w; w = max; } }
                     else { if (h > max) { w *= max/h; h = max; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.9);
+                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.95);
                     document.getElementById('viewImg').classList.remove('hidden');
                     document.getElementById('uploadGuide').style.display = 'none';
                 };
@@ -111,89 +126,50 @@
         }
 
         async function saveAndExport() {
-            try {
-                const fish = document.getElementById('fish');
-                const loc = document.getElementById('loc');
-                const bait = document.getElementById('bait');
-                const imgEl = document.getElementById('viewImg');
-                
-                if(!fish.value || imgEl.classList.contains('hidden')) {
-                    alert('형님! 어종이랑 사진은 꼭 넣어주십쇼!');
-                    return;
-                }
-
-                // 💡 [초단순화 1] 화면 스크롤 맨 위로 올려서 밑동 짤림 방지
-                window.scrollTo(0, 0);
-
-                // 💡 [초단순화 2] 복잡하게 태그 안 바꾸고, 그냥 HTML 자체에 글자를 세팅만 함
-                document.querySelectorAll('input').forEach(el => {
-                    el.setAttribute('value', el.value);
-                    el.style.color = '#000000'; 
-                });
-                document.querySelectorAll('textarea').forEach(el => {
-                    el.innerHTML = el.value;
-                    el.style.color = '#000000';
-                });
-
-                const area = document.getElementById('captureArea');
-                
-                // 💡 [초단순화 3] 캡처 기능 기본 모드로 실행
-                const canvas = await html2canvas(area, { 
-                    scale: 2, 
-                    backgroundColor: '#ffffff'
-                });
-                
-                const cardImgData = canvas.toDataURL('image/jpeg', 0.9);
-
-                // 💡 [초단순화 4] 보관함에 복잡한 리사이징 없이 압축률만 낮춰서 바로 저장
-                const thumbData = canvas.toDataURL('image/jpeg', 0.2); 
-                diaryLogs.unshift({ id: Date.now(), img: thumbData });
-                if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(diaryLogs));
-                renderArchive();
-
-                // 💡 [초단순화 5] 마지막에 갤러리 다운로드 트리거
-                const link = document.createElement('a');
-                link.download = `입질가드_${fish.value}.jpg`;
-                link.href = cardImgData;
-                link.click();
-
-                alert('형님, 기본 모드로 안전하게 저장 완료했습니다!');
-
-                // 초기화
-                document.querySelectorAll('input, textarea').forEach(el => { el.value = ''; el.removeAttribute('value'); });
-                document.querySelectorAll('textarea').forEach(el => el.innerHTML = '');
-                imgEl.src = '';
-                imgEl.classList.add('hidden');
-                document.getElementById('uploadGuide').style.display = 'flex';
-
-            } catch (error) {
-                // 💡 만약 뻗더라도 왜 뻗었는지 형님 화면에 바로 뜨게 해둠
-                alert('형님, 에러가 났습니다!: ' + error.message);
-                console.error(error);
+            const fish = document.getElementById('fish');
+            const size = document.getElementById('size');
+            const loc = document.getElementById('loc');
+            const bait = document.getElementById('bait');
+            const imgEl = document.getElementById('viewImg');
+            
+            if(!fish.value || imgEl.classList.contains('hidden')) {
+                return alert('형님, 사진이랑 어종은 꼭 넣어주십쇼!');
             }
-        }
 
-        function renderArchive() {
-            const list = document.getElementById('archiveList');
-            if(diaryLogs.length === 0) {
-                list.innerHTML = '<div class="w-full text-center py-10 text-slate-400"><p class="text-xs font-bold">보관함이 비어있습니다.</p></div>';
-                return;
-            }
-            list.innerHTML = diaryLogs.map(log => `
-                <div class="archive-item">
-                    <img src="${log.img}" onclick="openFullscreen('${log.img}')">
-                </div>
-            `).join('');
-        }
+            const area = document.getElementById('captureArea');
+            
+            // 캡처 전에 입력 박스들의 글자를 고정 텍스트 박스로 복사
+            document.getElementById('fish_fixed').innerText = fish.value || ' ';
+            document.getElementById('size_fixed').innerText = size.value || '00';
+            document.getElementById('loc_fixed').innerText = loc.value || ' ';
+            document.getElementById('bait_fixed').innerText = bait.value || ' ';
+            
+            // 캡처용 스타일 적용
+            area.classList.add('rendering');
 
-        function openFullscreen(src) {
-            document.getElementById('fullscreenImg').src = src;
-            document.getElementById('fullscreenOverlay').style.display = 'flex';
-        }
+            // 초고화질 캡처
+            const canvas = await html2canvas(area, { 
+                scale: 2, 
+                backgroundColor: '#ffffff'
+            });
 
-        function closeFullscreen() {
-            document.getElementById('fullscreenOverlay').style.display = 'none';
+            // 캡처 끝났으니 입력창 원상복구
+            area.classList.remove('rendering');
+
+            // 갤러리 다운로드
+            const cardImgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `입질가드_${new Date().toISOString().slice(2,10)}_${fish.value}.png`;
+            link.href = cardImgData;
+            link.click();
+
+            alert('형님! Location 글자까지 완벽하게 갤러리에 저장했습니다! 🎣');
+
+            // 초기화
+            [fish, size, loc, bait].forEach(i => i.value = '');
+            imgEl.src = '';
+            imgEl.classList.add('hidden');
+            document.getElementById('uploadGuide').style.display = 'flex';
         }
     </script>
 </body>
