@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>입질 가드 (Fishing Log) - 메모리 제로 모드</title>
+    <title>입질 가드 (Fishing Log) - 찬둥 에디션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+        /* 💡 필기체 스타일을 위한 폰트 추가 */
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&family=Nanum+Pen+Script&display=swap');
+        
         body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        
+        /* 💡 찬둥의 필기체 시그니처 스타일 */
+        .chan-doong-signature { font-family: 'Nanum Pen Script', cursive; font-size: 22px; color: #2563eb; transform: rotate(-12deg); margin-bottom: -8px; margin-left: -5px; z-index: 50; }
         
         .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 24px; position: relative;}
         
@@ -27,14 +32,16 @@
 </head>
 <body class="py-10 px-4">
     <div class="max-w-md mx-auto min-h-screen">
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 flex flex-col items-center">
+            <span class="chan-doong-signature">찬둥의</span>
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
             <p class="text-xs text-slate-400 mt-1">갤러리 고화질 저장 전용 v2.0</p>
         </header>
 
         <section id="captureArea" class="diary-card mb-8 bg-white">
             <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2">
-                <div>
+                <div class="flex flex-col relative">
+                    <span class="chan-doong-signature text-sm">찬둥의</span>
                     <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5"></p>
                     <div class="relative">
                         <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase w-32">
@@ -102,31 +109,22 @@
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'});
 
-        // 💡 [메모리 제로 로직] 0.1초 즉시 삭제 청소부
         let currentUrl = null;
 
         function loadFile(e) {
             const file = e.target.files[0];
             if(!file) return;
-
             const imgEl = document.getElementById('viewImg');
             const uploadGuide = document.getElementById('uploadGuide');
-
-            // 💡 [청소] 이전 메모리 주소 즉시 파기 (찌꺼기 제거)
             if (currentUrl) {
                 URL.revokeObjectURL(currentUrl);
             }
-
-            // 💡 [압축] 파일을 읽지 않고 메모리 주소만 생성 (가장 가벼운 방식)
             currentUrl = URL.createObjectURL(file);
             imgEl.src = currentUrl;
-            
             imgEl.onload = function() {
                 imgEl.classList.remove('hidden');
                 uploadGuide.style.display = 'none';
             };
-            
-            // 인풋 초기화로 브라우저 점유 해제
             e.target.value = "";
         }
 
@@ -136,38 +134,27 @@
             const loc = document.getElementById('loc');
             const bait = document.getElementById('bait');
             const imgEl = document.getElementById('viewImg');
-            
             if(!fish.value || imgEl.classList.contains('hidden')) {
                 return alert('형님, 사진이랑 어종은 꼭 넣어주십쇼!');
             }
-
             const area = document.getElementById('captureArea');
-            
             document.getElementById('fish_fixed').innerText = fish.value || ' ';
             document.getElementById('size_fixed').innerText = size.value || '00';
             document.getElementById('loc_fixed').innerText = loc.value || ' ';
             document.getElementById('bait_fixed').innerText = bait.value || ' ';
-            
             area.classList.add('rendering');
             window.scrollTo(0, 0); 
-
-            // 💡 고화질 저장
             const canvas = await html2canvas(area, { 
                 scale: 2.5, 
                 backgroundColor: '#ffffff',
                 useCORS: true 
             });
-
             area.classList.remove('rendering');
-
             const link = document.createElement('a');
             link.download = `입질가드_${new Date().getTime()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-
             alert('형님! 인생 최대어 기록 갤러리에 저장했습니다! 🎣');
-
-            // 💡 저장 후 메모리 싹 비우고 초기화
             if (currentUrl) {
                 URL.revokeObjectURL(currentUrl);
                 currentUrl = null;
