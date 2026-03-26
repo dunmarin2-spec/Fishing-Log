@@ -9,109 +9,123 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #0f172a; color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        /* 💡 폰에 저장될 카드 디자인 (낚시 잡지 느낌) */
+        /* 💡 화이트 카드 디자인 (비율 3:4 고정) */
         #captureArea {
             width: 100%;
             max-width: 500px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            aspect-ratio: 3 / 4; 
+            background-color: #ffffff;
             padding: 24px;
             border-radius: 24px;
-            border: 2px solid #334155;
-            display: none; /* 생성 전엔 숨김 */
+            border: 1px solid #e2e8f0;
+            margin: 10px auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        .pay-btn { background-color: #FAE100; color: #3C1E1E !important; display: inline-flex; align-items: center; justify-content: center; padding: 14px 24px; border-radius: 16px; font-weight: 800; gap: 8px; font-size: 14px; text-decoration: none; }
+        
+        /* 💡 사진 영역 (카드 높이의 절반 고정) */
+        .photo-wrapper {
+            width: 100%;
+            height: 50%; 
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+            background-color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #cardImg { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* 💡 입력창 텍스트 색상 강제 */
+        input, textarea { color: #1e293b !important; }
+        .pay-btn { background-color: #FAE100; color: #3C1E1E !important; display: inline-flex !important; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 10px; font-weight: 800; gap: 6px; font-size: 13px; text-decoration: none; }
     </style>
 </head>
-<body class="py-10 px-4">
-    <div class="max-w-md mx-auto">
+<body class="py-6 px-4">
+    <div class="max-w-md mx-auto flex flex-col min-h-screen">
         
-        <header class="text-center mb-10">
-            <h1 class="text-4xl font-black text-blue-500 flex justify-center items-center gap-2 italic tracking-tighter">
-                <i data-lucide="anchor"></i> IPJIL GUARD
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-black text-blue-600 flex justify-center items-center gap-1 italic tracking-tighter">
+                <i data-lucide="waves" class="w-8 h-8"></i> IPJIL GUARD
             </h1>
-            <p class="text-slate-400 mt-2 text-xs font-bold uppercase tracking-widest">Digital Fishing Journal</p>
+            <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">Digital Fishing Archive</p>
         </header>
 
-        <section class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl mb-10">
-            <div class="space-y-4">
-                <label class="block bg-slate-900 border-2 border-dashed border-slate-700 p-5 rounded-2xl text-center cursor-pointer hover:border-blue-500 transition">
-                    <i data-lucide="image-plus" class="mx-auto mb-1 text-slate-500"></i>
-                    <span id="photoLabel" class="text-xs font-bold text-slate-400">월척 사진 선택</span>
-                    <input type="file" accept="image/*" class="hidden" onchange="handleFile(event)">
+        <section class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm mb-6">
+            <div class="space-y-3">
+                <label class="block bg-slate-50 border-2 border-dashed border-slate-200 p-4 rounded-xl text-center cursor-pointer hover:bg-slate-100 transition">
+                    <i data-lucide="camera" class="mx-auto mb-1 text-slate-400 w-6 h-6"></i>
+                    <span id="photoLabel" class="text-xs font-bold text-slate-500">월척 사진 촬영 / 선택</span>
+                    <input type="file" accept="image/*" class="hidden" onchange="updateLivePreview(event)">
                 </label>
-                <div id="formPreview" class="hidden h-48 w-full"><img id="previewImg" class="w-full h-full object-cover rounded-xl border border-slate-700"></div>
                 
-                <div class="grid grid-cols-2 gap-3">
-                    <input id="fish" type="text" placeholder="어종" class="p-4 border-none rounded-xl bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                    <input id="size" type="text" placeholder="크기(cm)" class="p-4 border-none rounded-xl bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="fish" type="text" placeholder="어종" oninput="liveText()" class="p-3 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="size" type="text" placeholder="크기(cm)" oninput="liveText()" class="p-3 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <input id="loc" type="text" placeholder="포인트 (예: 가덕도 하방)" class="w-full p-4 border-none rounded-xl bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                <input id="tide" type="text" placeholder="물때 (예: 6물)" class="w-full p-4 border-none rounded-xl bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                <textarea id="bait" placeholder="채비/미끼 (예: 1호찌, 크릴)" class="w-full p-4 border-none rounded-xl bg-slate-900 text-sm h-20 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                
-                <button onclick="generateCard()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl shadow-lg active:scale-95 transition text-lg italic">GENERATE CARD</button>
+                <input id="loc" type="text" placeholder="포인트/날짜" oninput="liveText()" class="w-full p-3 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                <textarea id="bait" placeholder="채비 및 미끼 기록" oninput="liveText()" class="w-full p-3 border border-slate-200 rounded-xl bg-white text-sm h-16 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
         </section>
 
-        <div id="captureArea" class="mx-auto">
-            <div class="flex justify-between items-end mb-4 border-b border-slate-700 pb-4">
+        <div id="captureArea">
+            <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2">
                 <div>
-                    <p id="cardDate" class="text-[10px] text-blue-400 font-bold tracking-widest mb-1"></p>
-                    <h2 id="cardFish" class="text-3xl font-black text-white italic uppercase"></h2>
+                    <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5 tracking-tight"></p>
+                    <h2 id="cardFish" class="text-2xl font-black text-slate-900 italic uppercase tracking-tighter">READY...</h2>
                 </div>
                 <div class="text-right">
-                    <p id="cardSize" class="text-4xl font-black text-blue-500 italic"></p>
+                    <p id="cardSize" class="text-3xl font-black text-blue-600 italic tracking-tighter">00<span class="text-base font-normal">CM</span></p>
                 </div>
             </div>
             
-            <div class="relative w-full h-72 rounded-xl overflow-hidden mb-6 border-4 border-slate-700 shadow-inner">
-                <img id="cardImg" class="w-full h-full object-cover">
+            <div class="photo-wrapper">
+                <img id="cardImg" class="hidden">
+                <p id="noImgText" class="text-slate-300 text-xs font-bold italic flex items-center gap-2"><i data-lucide="image"></i> NO IMAGE</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                    <p class="text-[9px] text-slate-500 font-bold mb-1 uppercase">Location</p>
-                    <p id="resLoc" class="text-xs font-bold text-slate-200"></p>
+            <div class="flex-grow flex flex-col justify-between">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <p class="text-[8px] text-slate-400 font-bold mb-0.5 uppercase">Location</p>
+                        <p id="resLoc" class="text-[11px] font-bold text-slate-800 truncate">-</p>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <p class="text-[8px] text-slate-400 font-bold mb-0.5 uppercase">Status</p>
+                        <p id="resTide" class="text-[11px] font-bold text-slate-800">RECORDED</p>
+                    </div>
                 </div>
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                    <p class="text-[9px] text-slate-500 font-bold mb-1 uppercase">Tide</p>
-                    <p id="resTide" class="text-xs font-bold text-slate-200"></p>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <p class="text-[8px] text-slate-400 font-bold mb-1 uppercase">Notes & Equipment</p>
+                    <p id="resBait" class="text-[11px] font-semibold text-slate-700 leading-relaxed h-[40px] overflow-hidden">-</p>
                 </div>
-            </div>
-            
-            <div class="mt-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                <p class="text-[9px] text-slate-500 font-bold mb-1 uppercase">Equipment & Bait</p>
-                <p id="resBait" class="text-xs font-bold text-slate-300 leading-relaxed"></p>
-            </div>
-
-            <div class="mt-6 flex justify-between items-center opacity-30">
-                <p class="text-[8px] font-black italic tracking-tighter">OFFICIAL FISHING LOG</p>
-                <i data-lucide="waves" class="w-4 h-4"></i>
+                <p class="text-[7px] text-slate-300 font-black italic tracking-[0.5em] text-center mt-3">CERTIFIED BY IPJIL GUARD</p>
             </div>
         </div>
 
-        <div id="saveAction" class="hidden mt-6 pb-20">
-            <button onclick="downloadImage()" class="w-full bg-green-600 text-white font-bold p-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition">
-                <i data-lucide="download"></i> 내 휴대폰 갤러리에 저장 (파일)
+        <div class="mt-8 pb-10">
+            <button onclick="downloadImage()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition text-lg">
+                <i data-lucide="download"></i> 갤러리에 이미지 저장
             </button>
-            <p class="text-center text-slate-500 text-[10px] mt-4 font-bold tracking-tighter italic">이미지로 저장하면 평생 소장 가능합니다!</p>
         </div>
 
-        <footer class="text-center mt-10">
-            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="pay-btn shadow-md">
-                <span style="background: #3C1E1E; color: #FAE100; padding: 2px 6px; border-radius: 5px; font-size: 11px; font-weight: 900;">PAY</span>
-                <span>커피 후원하기</span>
+        <footer class="text-center pb-8">
+            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="pay-btn shadow-sm">
+                <span class="bg-slate-900 text-yellow-400 px-1.5 py-0.5 rounded text-[10px] mr-1">PAY</span> 커피 후원하기
             </a>
         </footer>
     </div>
 
     <script>
-        let currentImg = null;
         lucide.createIcons();
+        document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'2-digit', day:'2-digit'});
 
-        function handleFile(e) {
+        function updateLivePreview(e) {
             const file = e.target.files[0];
             if(!file) return;
             const reader = new FileReader();
@@ -119,58 +133,45 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const max = 800; // 저장용이니까 화질 조금 더 높임
+                    const max = 1200; 
                     let w = img.width, h = img.height;
                     if (w > h) { if (w > max) { h *= max/w; w = max; } }
                     else { if (h > max) { w *= max/h; h = max; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    currentImg = canvas.toDataURL('image/jpeg', 0.9);
-                    document.getElementById('previewImg').src = currentImg;
-                    document.getElementById('formPreview').classList.remove('hidden');
+                    
+                    const cardImg = document.getElementById('cardImg');
+                    cardImg.src = canvas.toDataURL('image/jpeg', 0.9);
+                    cardImg.classList.remove('hidden');
+                    document.getElementById('noImgText').classList.add('hidden');
                 };
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        function generateCard() {
-            const f = document.getElementById('fish').value;
-            const s = document.getElementById('size').value;
-            const l = document.getElementById('loc').value;
-            const t = document.getElementById('tide').value;
-            const b = document.getElementById('bait').value;
-
-            if(!f || !currentImg) return alert('어종과 사진은 필수!');
-
-            // 데이터 박제
-            document.getElementById('cardDate').innerText = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'2-digit', day:'2-digit'});
-            document.getElementById('cardFish').innerText = f;
-            document.getElementById('cardSize').innerText = s + 'CM';
-            document.getElementById('resLoc').innerText = l || '-';
-            document.getElementById('resTide').innerText = t || '-';
-            document.getElementById('resBait').innerText = b || '기록 없음';
-            document.getElementById('cardImg').src = currentImg;
-            
-            // 화면 노출
-            document.getElementById('captureArea').style.display = 'block';
-            document.getElementById('saveAction').classList.remove('hidden');
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            lucide.createIcons();
+        function liveText() {
+            document.getElementById('cardFish').innerText = (document.getElementById('fish').value || 'READY...').substring(0, 12);
+            document.getElementById('cardSize').innerHTML = (document.getElementById('size').value || '00') + '<span class="text-base font-normal">CM</span>';
+            document.getElementById('resLoc').innerText = (document.getElementById('loc').value || '-').substring(0, 20);
+            document.getElementById('resBait').innerText = (document.getElementById('bait').value || '-').substring(0, 60);
         }
 
         function downloadImage() {
             const area = document.getElementById('captureArea');
-            // 💡 html2canvas로 영역 전체를 고화질 이미지로 변환
+            if(document.getElementById('cardImg').classList.contains('hidden')) return alert('사진을 먼저 찍어주세요!');
+            
             html2canvas(area, { 
-                scale: 3, // 저장할 땐 고화질로!
-                backgroundColor: '#0f172a' 
+                scale: 3, 
+                backgroundColor: '#ffffff',
+                useCORS: true 
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `입질가드_${document.getElementById('cardFish').innerText}_${document.getElementById('cardSize').innerText}.png`;
+                const fish = document.getElementById('fish').value || '월척';
+                link.download = `입질가드_${fish}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                alert('갤러리에 조행기가 파일로 저장되었습니다! 🎣');
+                alert('갤러리에 깔끔하게 저장되었습니다! 🎣');
             });
         }
     </script>
