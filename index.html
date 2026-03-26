@@ -11,111 +11,104 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        /* 💡 캡처될 구역 (입력창 포함) */
-        #captureArea {
-            background-color: #ffffff;
-            padding: 24px;
+        /* 💡 캡처 및 보관함 카드 디자인 */
+        .diary-card {
             width: 100%;
-            max-width: 450px;
-            margin: 0 auto;
+            max-width: 350px;
+            aspect-ratio: 9 / 14; 
+            background-color: #ffffff;
+            padding: 20px;
             border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
         }
+        
+        .photo-box { width: 100%; height: 50%; border-radius: 8px; overflow: hidden; background-color: #f1f5f9; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        .photo-zone {
-            width: 100%;
-            aspect-ratio: 1 / 1; /* 사진은 깔끔하게 정사각형 */
-            background-color: #f1f5f9;
-            border-radius: 12px;
-            overflow: hidden;
+        /* 💡 가로 슬라이드 보관함 설정 */
+        .archive-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 20px;
+            padding: 20px 0;
+            scrollbar-width: none; /* 파이어폭스 */
         }
-
-        /* 💡 저장 시 입력창 느낌 안 나게 투명하게 처리 */
-        .log-input {
-            width: 100%;
-            border: none;
-            background: transparent;
-            font-weight: 800;
-            color: #1e293b;
-            padding: 8px 0;
-            outline: none;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .log-input::placeholder { color: #cbd5e1; font-weight: 400; }
-
-        .safe-bottom { height: 100px; } /* 갤러리 정보창 회피 공간 */
+        .archive-container::-webkit-scrollbar { display: none; } /* 크롬, 사파리 */
+        .archive-item { min-width: 85%; scroll-snap-align: center; transform: scale(0.95); transition: 0.3s; }
+        
+        .safe-bottom { height: 60px; }
     </style>
 </head>
 <body class="py-6 px-4">
-    <div class="max-w-md mx-auto">
+    <div class="max-w-md mx-auto min-h-screen">
         
-        <div id="captureArea">
-            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-2">
-                <h1 class="text-xl font-black italic text-blue-600 tracking-tighter">IPJIL GUARD</h1>
-                <span id="curDate" class="text-[10px] font-bold text-slate-400"></span>
-            </div>
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
+            <p class="text-[10px] font-bold text-slate-400">나만의 디지털 낚시 일기장</p>
+        </header>
 
-            <div class="photo-zone" onclick="document.getElementById('fileInput').click()">
-                <img id="viewImg" class="hidden w-full h-full object-cover">
-                <div id="uploadGuide" class="text-center">
-                    <i data-lucide="camera" class="mx-auto mb-2 text-slate-300 w-10 h-10"></i>
-                    <p class="text-xs font-bold text-slate-400">터치하여 사진 등록</p>
+        <section id="captureArea" class="diary-card mb-6" style="border-radius: 20px;">
+            <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2 text-black">
+                <div>
+                    <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5"></p>
+                    <input type="text" id="fish" placeholder="어종 입력" class="text-xl font-black text-slate-900 italic uppercase bg-transparent border-none outline-none w-32">
+                </div>
+                <div class="flex items-baseline">
+                    <input type="text" id="size" placeholder="00" class="text-3xl font-black text-blue-600 italic bg-transparent border-none outline-none w-12 text-right">
+                    <span class="text-blue-600 font-bold italic">CM</span>
+                </div>
+            </div>
+            
+            <div class="photo-box" onclick="document.getElementById('fileInput').click()">
+                <img id="viewImg" class="hidden">
+                <div id="uploadGuide" class="flex flex-col items-center justify-center h-full text-slate-300">
+                    <i data-lucide="camera"></i>
+                    <p class="text-[10px] font-bold mt-1">터치하여 사진 등록</p>
                 </div>
                 <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="loadFile(event)">
             </div>
 
-            <div class="space-y-1">
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <p class="text-[8px] font-bold text-blue-500 uppercase tracking-widest">Species</p>
-                        <input type="text" id="fish" placeholder="어종 입력" class="log-input text-xl">
-                    </div>
-                    <div class="w-24">
-                        <p class="text-[8px] font-bold text-blue-500 uppercase tracking-widest">Size(cm)</p>
-                        <input type="text" id="size" placeholder="00" class="log-input text-xl text-right">
-                    </div>
+            <div class="space-y-3 flex-grow text-black">
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <p class="text-[7px] text-slate-400 font-bold uppercase mb-1">Location / Date</p>
+                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="text-[11px] font-bold text-slate-800 bg-transparent border-none outline-none w-full">
                 </div>
-
-                <div>
-                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Location / Date</p>
-                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="log-input text-sm">
-                </div>
-
-                <div>
-                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Equipment & Bait</p>
-                    <textarea id="bait" placeholder="채비 및 미끼 기록..." class="log-input text-sm h-16 resize-none w-full"></textarea>
+                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <p class="text-[7px] text-slate-400 font-bold uppercase mb-1">Equipment & Bait</p>
+                    <textarea id="bait" placeholder="채비 및 미끼 기록..." class="text-[11px] font-medium text-slate-700 bg-transparent border-none outline-none w-full h-10 resize-none leading-tight"></textarea>
                 </div>
             </div>
+            <div class="safe-bottom"></div>
+        </section>
 
-            <div class="safe-bottom flex flex-col justify-end pb-4">
-                <p class="text-[7px] text-slate-200 font-black italic tracking-[0.5em] text-center uppercase">Certified Fishing Archive</p>
-            </div>
+        <button onclick="saveDiary()" class="w-full bg-blue-600 text-white font-black p-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition mb-12">
+            <i data-lucide="download"></i> 조행기 저장 및 보관
+        </button>
+
+        <div class="border-t border-slate-200 pt-6">
+            <h2 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                <i data-lucide="book-open" class="text-blue-500"></i> 나의 조행기 보관함
+            </h2>
+            <p class="text-[10px] text-slate-400 mb-4 font-bold">좌우로 밀어서 지난 기록을 확인하세요</p>
+            
+            <div id="archiveList" class="archive-container">
+                </div>
         </div>
 
-        <div class="mt-8 pb-12">
-            <button onclick="saveToGallery()" class="w-full bg-blue-600 text-white font-black p-5 rounded-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition text-lg">
-                <i data-lucide="download"></i> 지금 이 화면을 갤러리에 저장
-            </button>
-            <p class="text-center text-slate-400 text-[10px] mt-4 font-bold italic">위의 입력창이 그대로 이미지 파일로 저장됩니다!</p>
-        </div>
-
-        <footer class="text-center pb-10">
-            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-4 py-2 rounded-xl font-bold text-xs">
-                <span>PAY</span> 커피 한 잔 후원하기
-            </a>
+        <footer class="text-center py-10 opacity-50">
+            <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Certified Fishing Log</p>
         </footer>
     </div>
 
     <script>
+        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_diary_v18') || '[]');
         lucide.createIcons();
-        document.getElementById('curDate').innerText = new Date().toLocaleDateString();
+        document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
+        renderArchive();
 
         function loadFile(e) {
             const file = e.target.files[0];
@@ -125,16 +118,14 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const max = 1000;
+                    const max = 800;
                     let w = img.width, h = img.height;
                     if (w > h) { if (w > max) { h *= max/w; w = max; } }
                     else { if (h > max) { w *= max/h; h = max; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    
-                    const viewImg = document.getElementById('viewImg');
-                    viewImg.src = canvas.toDataURL('image/jpeg', 0.9);
-                    viewImg.classList.remove('hidden');
+                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('viewImg').classList.remove('hidden');
                     document.getElementById('uploadGuide').classList.add('hidden');
                 };
                 img.src = ev.target.result;
@@ -142,24 +133,69 @@
             reader.readAsDataURL(file);
         }
 
-        function saveToGallery() {
+        async function saveDiary() {
+            const fish = document.getElementById('fish').value;
+            const img = document.getElementById('viewImg').src;
+            if(!fish || !img) return alert('사진과 어종은 필수입니다!');
+
+            // 1. 갤러리 저장을 위한 캡처 (이미지 파일 생성)
             const area = document.getElementById('captureArea');
-            if(document.getElementById('viewImg').classList.contains('hidden')) return alert('사진을 먼저 올려주세요!');
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: '#ffffff' });
+            const imgData = canvas.toDataURL('image/png');
+
+            // 2. 폰 갤러리에 다운로드
+            const link = document.createElement('a');
+            link.download = `입질가드_${fish}.png`;
+            link.href = imgData;
+            link.click();
+
+            // 3. 앱 내부 보관함에 저장 (텍스트와 이미지를 로컬에 보관)
+            const newEntry = {
+                id: Date.now(),
+                fish: fish,
+                size: document.getElementById('size').value,
+                loc: document.getElementById('loc').value,
+                bait: document.getElementById('bait').value,
+                img: imgData, // 캡처된 전체 카드 이미지 보관
+                date: document.getElementById('cardDate').innerText
+            };
+            diaryLogs.unshift(newEntry);
+            localStorage.setItem('ipjil_diary_v18', JSON.stringify(diaryLogs));
+
+            alert('갤러리 저장 및 보관함 등록 완료! 🎣');
+            renderArchive();
             
-            // 💡 캡처 시 입력창의 커서나 테두리를 깔끔하게 보이기 위해 처리
-            html2canvas(area, { 
-                scale: 3, 
-                backgroundColor: '#ffffff',
-                logging: false,
-                useCORS: true 
-            }).then(canvas => {
-                const link = document.createElement('a');
-                const fishName = document.getElementById('fish').value || '월척';
-                link.download = `입질가드_${fishName}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                alert('갤러리에 파일 저장 완료! 🎣');
-            });
+            // 입력창 초기화
+            document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+            document.getElementById('viewImg').classList.add('hidden');
+            document.getElementById('uploadGuide').classList.remove('hidden');
+        }
+
+        function renderArchive() {
+            const list = document.getElementById('archiveList');
+            if(diaryLogs.length === 0) {
+                list.innerHTML = '<div class="w-full text-center py-10 text-slate-300 text-xs italic">아직 보관된 기록이 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = diaryLogs.map(log => `
+                <div class="archive-item">
+                    <div class="relative group">
+                        <img src="${log.img}" class="w-full rounded-2xl shadow-lg border border-slate-200">
+                        <button onclick="deleteLog(${log.id})" class="absolute top-2 right-2 bg-red-500/80 text-white p-1.5 rounded-full shadow-md">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function deleteLog(id) {
+            if(confirm('이 기록을 보관함에서 지울까요? (폰에 저장된 사진은 유지됩니다)')) {
+                diaryLogs = diaryLogs.filter(log => log.id !== id);
+                localStorage.setItem('ipjil_diary_v18', JSON.stringify(diaryLogs));
+                renderArchive();
+            }
         }
     </script>
 </body>
