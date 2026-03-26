@@ -18,24 +18,24 @@
         .archive-item { min-width: 80%; scroll-snap-align: center; position: relative; cursor: pointer; }
         #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
         #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 10px; }
-        .pay-btn { background-color: #FAE100; color: #3C1E1E !important; display: inline-flex !important; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 14px; font-weight: 800; gap: 8px; font-size: 14px; text-decoration: none !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* 💡 저장 시 입력창 텍스트 색상 강제 */
+        .input-text { color: #1e293b !important; font-weight: 700; }
     </style>
 </head>
 <body class="py-6 px-4">
     <div class="max-w-md mx-auto min-h-screen">
         <header class="text-center mb-6">
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Revenue & Log System</p>
         </header>
 
         <section id="captureArea" class="diary-card mb-6 shadow-2xl">
             <div class="flex justify-between items-end mb-4 border-b-2 border-slate-900 pb-2">
                 <div>
                     <p id="cardDate" class="text-[9px] text-blue-600 font-bold mb-0.5"></p>
-                    <input type="text" id="fish" placeholder="어종 입력" class="text-xl font-black text-slate-900 italic uppercase bg-transparent border-none outline-none w-32">
+                    <input type="text" id="fish" placeholder="어종 입력" class="input-text text-xl italic uppercase bg-transparent border-none outline-none w-32">
                 </div>
                 <div class="flex items-baseline text-blue-600 font-bold italic">
-                    <input type="text" id="size" placeholder="00" class="text-3xl font-black bg-transparent border-none outline-none w-12 text-right">
+                    <input type="text" id="size" placeholder="00" class="input-text text-3xl bg-transparent border-none outline-none w-12 text-right">
                     <span>CM</span>
                 </div>
             </div>
@@ -48,44 +48,39 @@
                 <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="loadFile(event)">
             </div>
 
-            <div class="space-y-3 flex-grow">
-                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+            <div class="space-y-3 flex-grow text-black">
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 overflow-hidden">
                     <p class="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Location</p>
-                    <input type="text" id="loc" placeholder="포인트 명칭" class="text-[11px] font-bold text-slate-800 bg-transparent border-none outline-none w-full">
+                    <input type="text" id="loc" placeholder="포인트 명칭 입력" class="input-text text-[11px] bg-transparent border-none outline-none w-full text-black">
                 </div>
-                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 overflow-hidden">
                     <p class="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Notes</p>
-                    <textarea id="bait" placeholder="채비/미끼 기록..." class="text-[11px] font-medium text-slate-700 bg-transparent border-none outline-none w-full h-10 resize-none leading-tight"></textarea>
+                    <textarea id="bait" placeholder="채비/미끼 기록..." class="input-text text-[11px] bg-transparent border-none outline-none w-full h-10 resize-none leading-tight text-black"></textarea>
                 </div>
             </div>
             <div class="h-10"></div>
         </section>
 
-        <button onclick="saveAndExport()" class="w-full bg-blue-600 text-white font-black p-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition mb-10">
+        <button onclick="saveAndExport()" class="w-full bg-blue-600 text-white font-black p-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition mb-10 text-black">
             <i data-lucide="download"></i> 조행기 저장 및 보관
         </button>
 
         <div class="text-center mb-10">
-            <p class="text-xs font-bold text-slate-600 mb-4">손맛을 보셨다면, 개발자에게 커피 한 잔!</p>
-            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="pay-btn">
-                <span class="bg-[#3C1E1E] text-[#FAE100] px-1.5 py-0.5 rounded text-[10px] font-black">PAY</span>
-                <span>커피 후원하기</span>
+            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-4 py-2 rounded-xl font-bold text-xs">
+                <span>PAY</span> 커피 후원하기
             </a>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-10">
-            <p class="text-xs font-bold text-slate-800 mb-3">낚싯대/릴 최저가 검색</p>
             <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
                 <input type="hidden" name="channel" value="user_side_view">
-                <input type="text" name="q" placeholder="시마노 / 다이와 낚시용품" class="flex-grow p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:ring-1 focus:ring-blue-400">
-                <button type="submit" class="bg-blue-600 text-white px-5 rounded-xl font-bold text-sm active:scale-95 transition">검색</button>
+                <input type="text" name="q" placeholder="낚시용품 최저가 검색" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none">
+                <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl font-bold text-xs">검색</button>
             </form>
-            <p class="text-[8px] text-slate-400 mt-3 italic leading-tight">
-                "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
-            </p>
+            <p class="text-[8px] text-slate-400 mt-2 italic">"이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다."</p>
         </div>
 
-        <div class="border-t border-slate-200 pt-6">
+        <div class="border-t border-slate-200 pt-6 text-black">
             <h2 class="text-lg font-black text-slate-800 mb-2">최근 조행기 (10개)</h2>
             <div id="archiveList" class="archive-container"></div>
         </div>
@@ -94,7 +89,8 @@
     <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
 
     <script>
-        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_recent_v24') || '[]');
+        // 💡 키 이름을 바꿔서 이전 데이터와 섞이지 않게 함
+        let diaryLogs = JSON.parse(localStorage.getItem('ipjil_recent_v26') || '[]');
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
         renderArchive();
@@ -128,14 +124,26 @@
             if(!fish || !img) return alert('사진과 어종 필수!');
 
             const area = document.getElementById('captureArea');
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: '#ffffff' });
-            const highResImg = canvas.toDataURL('image/png');
+            // 💡 캡처 시 입력창 글자 색상을 검정으로 강제 반영하기 위한 처리
+            const canvas = await html2canvas(area, { 
+                scale: 2, 
+                backgroundColor: '#ffffff',
+                onclone: (clonedDoc) => {
+                    // 💡 클론된 문서에서 입력창 텍스트가 잘 보이도록 강제 설정
+                    clonedDoc.querySelectorAll('input, textarea').forEach(el => {
+                        el.style.color = 'black';
+                    });
+                }
+            });
+            const cardImgData = canvas.toDataURL('image/png');
 
+            // 1. 갤러리 저장
             const link = document.createElement('a');
             link.download = `입질가드_${fish}.png`;
-            link.href = highResImg;
+            link.href = cardImgData;
             link.click();
 
+            // 2. 보관함용 저화질 압축 (글자가 포함된 카드 이미지 그대로 저장!)
             const lowResCanvas = document.createElement('canvas');
             const ctx = lowResCanvas.getContext('2d');
             lowResCanvas.width = canvas.width * 0.5;
@@ -145,10 +153,11 @@
 
             diaryLogs.unshift({ id: Date.now(), img: lowResImg });
             if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
-            localStorage.setItem('ipjil_recent_v24', JSON.stringify(diaryLogs));
+            localStorage.setItem('ipjil_recent_v26', JSON.stringify(diaryLogs));
             
-            alert('저장 완료! 최근 10개만 보관함에 표시됩니다. 🎣');
+            alert('저장 완료! 이제 Location 내용도 사진 속에 다 박혔습니다. 🎣');
             renderArchive();
+            
             document.querySelectorAll('input, textarea').forEach(i => i.value = '');
             document.getElementById('viewImg').classList.add('hidden');
             document.getElementById('uploadGuide').style.display = 'flex';
@@ -157,7 +166,7 @@
         function renderArchive() {
             const list = document.getElementById('archiveList');
             if(diaryLogs.length === 0) {
-                list.innerHTML = '<p class="w-full text-center py-10 text-slate-300 text-xs italic">비어있음</p>';
+                list.innerHTML = '<p class="w-full text-center py-10 text-slate-300 text-xs italic text-black">보관함이 비어있습니다.</p>';
                 return;
             }
             list.innerHTML = diaryLogs.map(log => `
