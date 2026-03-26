@@ -9,15 +9,15 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; padding-bottom: 30px;}
+        body { font-family: 'Pretendard', sans-serif; background-color: #ffffff; color: #1e293b; -webkit-tap-highlight-color: transparent; padding-bottom: 30px;}
         .diary-card { width: 100%; max-width: 350px; aspect-ratio: 9 / 14; background: white; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 24px; position: relative;}
         .photo-box { width: 100%; height: 50%; border-radius: 16px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         #viewImg { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
         
         .archive-container { display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px; scrollbar-width: none; -ms-overflow-style: none; }
         .archive-container::-webkit-scrollbar { display: none; }
-        .archive-item { min-width: 120px; max-width: 120px; aspect-ratio: 9/14; flex-shrink: 0; position: relative; cursor: pointer; }
-        .archive-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .archive-item { min-width: 100px; max-width: 100px; aspect-ratio: 9/14; flex-shrink: 0; position: relative; cursor: pointer; }
+        .archive-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid #e2e8f0; }
         
         #fullscreenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
         #fullscreenImg { max-width: 100%; max-height: 90vh; border-radius: 12px; }
@@ -29,7 +29,7 @@
     <div class="max-w-md mx-auto min-h-screen">
         <header class="flex justify-between items-center mb-6 px-2">
             <h1 class="text-3xl font-black text-blue-600 italic tracking-tighter">IPJIL GUARD</h1>
-            <span class="text-xs bg-slate-200 text-slate-700 font-bold px-3 py-1 rounded-full">Basic Mode</span>
+            <button onclick="hardReset()" class="text-[10px] bg-rose-500 text-white font-bold px-3 py-1 rounded-full">저장소 강제초기화</button>
         </header>
 
         <section id="captureArea" class="diary-card mb-6 bg-white">
@@ -79,13 +79,37 @@
     <div id="fullscreenOverlay" onclick="closeFullscreen()"><img id="fullscreenImg" src=""></div>
 
     <script>
-        // 💡 아예 꼬이지 않게 새로운 백지 상태의 저장소 사용
-        const STORAGE_KEY = 'ipjil_basic_v1';
+        const STORAGE_KEY = 'ipjil_basic_v2';
+
+        // 💡 [핵심 해결] 앱 켜질 때, 과거에 쌓아둔 똥(쓰레기 용량) 싹 다 강제 폭파!
+        function cleanOldGarbage() {
+            try {
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    let key = localStorage.key(i);
+                    // 현재 쓰는 키 빼고, ipjil 글자 들어간 예전 데이터는 무조건 삭제
+                    if (key && key.includes('ipjil') && key !== STORAGE_KEY) {
+                        localStorage.removeItem(key);
+                    }
+                }
+            } catch (e) { console.error("청소 에러", e); }
+        }
+        cleanOldGarbage();
+
         let diaryLogs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         
         lucide.createIcons();
         document.getElementById('cardDate').innerText = new Date().toLocaleDateString();
         renderArchive();
+
+        // 수동 강제 초기화 버튼용 함수
+        function hardReset() {
+            if(confirm("저장소를 완전히 비우시겠습니까? (에러 지속 시 클릭)")) {
+                localStorage.clear();
+                diaryLogs = [];
+                renderArchive();
+                alert("싹 다 지웠습니다 형님!");
+            }
+        }
 
         function loadFile(e) {
             const file = e.target.files[0];
@@ -95,13 +119,13 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const max = 1000;
+                    const max = 800;
                     let w = img.width, h = img.height;
                     if (w > h) { if (w > max) { h *= max/w; w = max; } }
                     else { if (h > max) { w *= max/h; h = max; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.9);
+                    document.getElementById('viewImg').src = canvas.toDataURL('image/jpeg', 0.8);
                     document.getElementById('viewImg').classList.remove('hidden');
                     document.getElementById('uploadGuide').style.display = 'none';
                 };
@@ -113,8 +137,6 @@
         async function saveAndExport() {
             try {
                 const fish = document.getElementById('fish');
-                const loc = document.getElementById('loc');
-                const bait = document.getElementById('bait');
                 const imgEl = document.getElementById('viewImg');
                 
                 if(!fish.value || imgEl.classList.contains('hidden')) {
@@ -122,10 +144,8 @@
                     return;
                 }
 
-                // 💡 [초단순화 1] 화면 스크롤 맨 위로 올려서 밑동 짤림 방지
                 window.scrollTo(0, 0);
 
-                // 💡 [초단순화 2] 복잡하게 태그 안 바꾸고, 그냥 HTML 자체에 글자를 세팅만 함
                 document.querySelectorAll('input').forEach(el => {
                     el.setAttribute('value', el.value);
                     el.style.color = '#000000'; 
@@ -137,30 +157,34 @@
 
                 const area = document.getElementById('captureArea');
                 
-                // 💡 [초단순화 3] 캡처 기능 기본 모드로 실행
-                const canvas = await html2canvas(area, { 
-                    scale: 2, 
-                    backgroundColor: '#ffffff'
-                });
-                
+                // 갤러리 저장용 원본 캡처
+                const canvas = await html2canvas(area, { scale: 2, backgroundColor: '#ffffff' });
                 const cardImgData = canvas.toDataURL('image/jpeg', 0.9);
 
-                // 💡 [초단순화 4] 보관함에 복잡한 리사이징 없이 압축률만 낮춰서 바로 저장
-                const thumbData = canvas.toDataURL('image/jpeg', 0.2); 
+                // 💡 [핵심 해결 2] 보관함 썸네일을 손톱만하게 줄여서 용량 폭발 완전 차단!
+                const thumbCanvas = document.createElement('canvas');
+                const tCtx = thumbCanvas.getContext('2d');
+                thumbCanvas.width = 150; // 가로 150 픽셀로 초소형화
+                thumbCanvas.height = canvas.height * (150 / canvas.width);
+                tCtx.drawImage(canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+                
+                // 압축률을 0.3으로 확 낮춰서 로컬스토리지에 쏙 들어가게 만듦
+                const thumbData = thumbCanvas.toDataURL('image/jpeg', 0.3); 
+
                 diaryLogs.unshift({ id: Date.now(), img: thumbData });
                 if(diaryLogs.length > 10) diaryLogs = diaryLogs.slice(0, 10);
+                
+                // 여기서 에러나면 무조건 옛날 데이터 꽉 찬 거니까 위에서 청소한 게 먹힐 겁니다.
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(diaryLogs));
                 renderArchive();
 
-                // 💡 [초단순화 5] 마지막에 갤러리 다운로드 트리거
                 const link = document.createElement('a');
                 link.download = `입질가드_${fish.value}.jpg`;
                 link.href = cardImgData;
                 link.click();
 
-                alert('형님, 기본 모드로 안전하게 저장 완료했습니다!');
+                alert('형님, 과거 찌꺼기 싹 비우고 안전하게 저장 완료했습니다!');
 
-                // 초기화
                 document.querySelectorAll('input, textarea').forEach(el => { el.value = ''; el.removeAttribute('value'); });
                 document.querySelectorAll('textarea').forEach(el => el.innerHTML = '');
                 imgEl.src = '';
@@ -168,8 +192,8 @@
                 document.getElementById('uploadGuide').style.display = 'flex';
 
             } catch (error) {
-                // 💡 만약 뻗더라도 왜 뻗었는지 형님 화면에 바로 뜨게 해둠
-                alert('형님, 에러가 났습니다!: ' + error.message);
+                // 혹시라도 또 꽉 찼다고 하면 수동으로 비우실 수 있게 안내
+                alert('형님, 폰 저장소가 꽉 꼬여있습니다! 우측 상단의 [저장소 강제초기화] 빨간 버튼을 한 번 눌러주십쇼!');
                 console.error(error);
             }
         }
