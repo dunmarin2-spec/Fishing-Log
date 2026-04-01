@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>입질 가드 (Fishing Log) - 찬둥 에디션</title>
+    <title>Fishing Log - 찬둥 에디션</title>
+    
+    <link rel="apple-touch-icon" href="./icon.png">
+    <link rel="icon" href="./icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
         /* 💡 필기체 스타일을 위한 폰트 추가 */
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&family=Nanum+Pen+Script&display=swap');
@@ -28,8 +34,6 @@
         .fixed-text { display: none; color: #1e293b; font-weight: 700; word-break: break-all; white-space: pre-wrap; }
         .rendering .fixed-text { display: block !important; }
     </style>
-<link rel="apple-touch-icon" href="./icon.png">
-<link rel="icon" href="./icon.png">
 </head>
 <body class="py-10 px-4">
     <div class="max-w-md mx-auto min-h-screen">
@@ -152,10 +156,12 @@
             });
             area.classList.remove('rendering');
             const link = document.createElement('a');
-            link.download = `입질가드_${new Date().getTime()}.png`;
+            link.download = `FishingLog_${new Date().getTime()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
             alert('형님! 인생 최대어 기록 갤러리에 저장했습니다! 🎣');
+            
+            // 저장 후 리셋 (형님이 원하신 루틴)
             if (currentUrl) {
                 URL.revokeObjectURL(currentUrl);
                 currentUrl = null;
